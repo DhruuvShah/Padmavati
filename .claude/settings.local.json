@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Dhruv\\\\Freelancing\\\\padmavati-corporation\" -Recurse -Force -File | ForEach-Object { $_.FullName } | Sort-Object)"
+    ]
+  }
+}
