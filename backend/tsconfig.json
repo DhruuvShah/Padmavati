@@ -9,9 +9,6 @@
     "isolatedModules": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "paths": {
-      "@/*": ["./src/*"]
-    }
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]

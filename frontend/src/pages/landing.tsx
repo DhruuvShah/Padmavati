@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
-import { Logo } from "@/components/Logo";
-import { ArrowRight, MapPin, Phone, Mail, Box, ShieldCheck, Zap, Menu, X } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Box, ShieldCheck, Zap, Menu, X } from "lucide-react";
 
 function FadeIn({ children, delay, duration = 1000 }: { children: React.ReactNode, delay: number, duration?: number }) {
   const [visible, setVisible] = useState(false);

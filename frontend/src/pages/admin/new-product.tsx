@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Upload, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -313,14 +313,13 @@ export default function NewProductPage() {
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
             <div className="w-full sm:w-48 flex-shrink-0 space-y-3">
               <Label>Product Image</Label>
-              <div 
+              <div
                 onClick={() => fileInputRef.current?.click()}
-                tabIndex={0}
                 role="button"
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:liquid-glass border-transparent hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:liquid-glass hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>

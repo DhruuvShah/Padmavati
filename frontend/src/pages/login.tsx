@@ -17,7 +17,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    console.log("Supabase URL in login:", (import.meta as any).env.VITE_SUPABASE_URL, (import.meta as any).env.NEXT_PUBLIC_SUPABASE_URL);
 
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email,

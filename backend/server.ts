@@ -1,9 +1,7 @@
 import express from "express";
-import path from "path";
 import multer from "multer";
 import sharp from "sharp";
 import { createClient } from "@supabase/supabase-js";
-import { createServer as createViteServer } from "vite";
 import * as dotenv from 'dotenv';
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
@@ -18,8 +16,8 @@ dotenv.config();
 // Actually, since RLS on storage says 'Admins can manage product images', we can either pass the user's Auth token from the frontend and use it,
 // OR simply bypass RLS by using the SUPABASE_SERVICE_ROLE_KEY. Since we don't know the service role key, we'll accept the JWT from the Authorization header
 // and pass it to the supabase client for the request.
-const supabaseUrl = "https://ikijhzoijipoaqgwnmvv.supabase.co";
-const supabaseAnonKey = "sb_publishable_8CxOhlxyWPoXeWQxhbxfDA_4_YBXDY6";
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -73,13 +71,26 @@ async function requireAdmin(req: express.Request, res: express.Response, next: e
 }
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3001');
 
   app.use(express.json());
   app.use(cookieParser(cookieSecret));
 
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',');
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    if (req.method === 'OPTIONS') { res.status(204).end(); return; }
+    next();
+  });
+
   // API Routes
-  app.get("/api/health", (req, res) => {
+  app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });
 
@@ -88,21 +99,6 @@ async function startServer() {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided" });
       }
-
-      // We need to pass the user's JWT token to Supabase so RLS succeeds
-      const authHeader = `Bearer ${(req as any).supabaseToken}`;
-      if (!authHeader) {
-        return res.status(401).json({ error: "No authorization header" });
-      }
-
-      // create a client specific to this request
-      const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      });
 
       const processedBuffer = await sharp(req.file.buffer)
         .rotate() // Auto-orients based on EXIF and removes EXIF
@@ -116,7 +112,7 @@ async function startServer() {
         await adminSupabase.storage.createBucket('product-images', { public: true });
       }
 
-      const { data, error } = await adminSupabase.storage
+      const { error } = await adminSupabase.storage
         .from('product-images')
         .upload(fileName, processedBuffer, {
           contentType: 'image/jpeg',
@@ -151,14 +147,6 @@ async function startServer() {
         return res.status(401).json({ error: "No authorization header" });
       }
 
-      const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      });
-
       // Fetch products to render HTML
       const { data: products, error: pErr } = await adminSupabase
         .from("products")
@@ -180,7 +168,7 @@ async function startServer() {
       if (pErr) throw new Error("Failed to fetch products: " + pErr.message);
 
       // Preserve order from productIds array
-      const sortedProducts = productIds.map(id => products.find(p => p.id === id)).filter(Boolean);
+      const sortedProducts = productIds.map(id => products.find(p => p.id === id)).filter((p): p is NonNullable<typeof p> => p != null);
 
       const html = `
         <!DOCTYPE html>
@@ -369,7 +357,7 @@ async function startServer() {
       }
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadErr } = await adminSupabase.storage
+      const { error: uploadErr } = await adminSupabase.storage
         .from('catalogue-pdfs') // Bucket might need to be created if not exists. The prompt implies it exists.
         .upload(fileName, pdfBuffer, {
           contentType: 'application/pdf',
@@ -557,7 +545,7 @@ async function startServer() {
   });
 
   // ---- ADMIN NOTIFICATION ROUTES ----
-  app.get("/api/admin/pending-requests", requireAdmin, async (req, res) => {
+  app.get("/api/admin/pending-requests", requireAdmin, async (_req, res) => {
     try {
       const { data: requests, error } = await adminSupabase
         .from('access_requests')
@@ -614,21 +602,6 @@ async function startServer() {
       res.status(500).json({ error: e.message });
     }
   });
-
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  }
 
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://localhost:${PORT}`);
