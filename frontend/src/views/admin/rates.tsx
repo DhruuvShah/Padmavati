@@ -244,7 +244,7 @@ export default function RatesPage() {
               <Plus className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <h2 className="text-lg font-heading font-semibold text-foreground mb-1">No rates defined</h2>
               <p className="text-muted-foreground mb-6">Add rate codes for quick calculations.</p>
-              <Button onClick={() => setAddOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Rate</Button>
+              <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" /> Add Rate</Button>
             </div>
           )}
         </div>

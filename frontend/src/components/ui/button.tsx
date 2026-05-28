@@ -8,15 +8,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary/90 text-primary-foreground border-primary/20 liquid-glass shadow-sm hover:bg-primary",
+        default: "!bg-primary/90 text-primary-foreground border-primary/20 liquid-glass shadow-sm hover:!bg-primary",
         outline:
-          "border-white/40 bg-white/30 liquid-glass shadow-sm hover:bg-white/50 hover:text-foreground aria-expanded:bg-white/50 aria-expanded:text-foreground dark:border-white/10 dark:bg-black/30 dark:hover:bg-black/50",
+          "border-border !bg-background/60 liquid-glass shadow-sm hover:!bg-muted hover:text-foreground aria-expanded:!bg-muted aria-expanded:text-foreground dark:border-border dark:!bg-background/40 dark:hover:!bg-muted",
         secondary:
-          "bg-secondary/50 text-secondary-foreground border-white/20 liquid-glass shadow-sm hover:bg-secondary/70 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "!bg-secondary text-secondary-foreground border-border liquid-glass shadow-sm hover:!bg-secondary/80 aria-expanded:!bg-secondary/80",
         ghost:
-          "border-transparent hover:bg-white/40 hover:text-foreground aria-expanded:bg-white/40 aria-expanded:text-foreground dark:hover:bg-black/40",
+          "border-transparent bg-transparent hover:!bg-muted text-foreground aria-expanded:!bg-muted dark:hover:!bg-muted",
         destructive:
-          "bg-destructive/80 text-destructive-foreground border-destructive/20 liquid-glass shadow-sm hover:bg-destructive focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/80 dark:hover:bg-destructive dark:focus-visible:ring-destructive/40",
+          "!bg-destructive/90 text-destructive-foreground border-destructive/20 liquid-glass shadow-sm hover:!bg-destructive focus-visible:ring-destructive/30 dark:!bg-destructive/90 dark:hover:!bg-destructive",
         link: "text-primary underline-offset-4 hover:underline shadow-none bg-transparent border-transparent",
       },
       size: {
