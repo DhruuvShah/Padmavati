@@ -195,7 +195,31 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
   }
-  .liquid-glass::before {
+
+  /* Same glass look, but solid enough to read over dense content.
+     Use this (instead of .liquid-glass) for floating panels that have
+     no dimming backdrop behind them — popovers, selects, dropdown menus —
+     so page text/controls don't show through the panel. */
+  .liquid-glass-opaque {
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.14);
+    border-radius: 1.5rem;
+    position: relative;
+  }
+  .liquid-glass-opaque.rounded-full {
+    border-radius: 9999px;
+  }
+  .dark .liquid-glass-opaque {
+    background: rgba(18, 16, 14, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.45);
+  }
+
+  .liquid-glass::before,
+  .liquid-glass-opaque::before {
     content: '';
     position: absolute;
     inset: 0;

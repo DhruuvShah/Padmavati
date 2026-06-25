@@ -11,10 +11,31 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { getProductPrice, getProductWeightGrams, computeRangeCeiling } from "@/lib/pricing";
+
+const DEFAULT_MAX_PRICE = 100000;
+const DEFAULT_MAX_WEIGHT_G = 10000;
+
+interface CatalogueProduct {
+  id: string;
+  name: string;
+  image_url: string | null;
+  weight_kg: number | string | null;
+  height_inches: string | null;
+  length_inches: string | null;
+  rate_type: "per_kg" | "per_piece";
+  direct_rate: number | string | null;
+  category_id: string | null;
+  // Postgrest returns a single object for a to-one relation; supabase-js's
+  // inferred type widens this to an array when no generated types are used,
+  // so we assert the real shape explicitly via `.returns<>()` below.
+  category: { name: string } | null;
+  rate_code: { code: string; value: number | string } | null;
+}
 
 export default function CreateCataloguePage() {
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<CatalogueProduct[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -24,8 +45,10 @@ export default function CreateCataloguePage() {
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [priceRange, setPriceRange] = useState([0, 100000]);
-  const [weightRange, setWeightRange] = useState([0, 10000]);
+  const [maxPrice, setMaxPrice] = useState(DEFAULT_MAX_PRICE);
+  const [maxWeight, setMaxWeight] = useState(DEFAULT_MAX_WEIGHT_G);
+  const [priceRange, setPriceRange] = useState([0, DEFAULT_MAX_PRICE]);
+  const [weightRange, setWeightRange] = useState([0, DEFAULT_MAX_WEIGHT_G]);
 
   useEffect(() => {
     fetchData();
@@ -40,12 +63,24 @@ export default function CreateCataloguePage() {
           rate_type, direct_rate, category_id,
           category:categories(name),
           rate_code:rate_codes(code, value)
-        `),
+        `).returns<CatalogueProduct[]>(),
         supabase.from('categories').select('id, name')
       ]);
 
       if (pRes.error) toast.error("Failed to load products: " + pRes.error.message);
-      else if (pRes.data) setProducts(pRes.data);
+      else if (pRes.data) {
+        setProducts(pRes.data);
+        // Size the filter sliders to the actual data so real products are never
+        // silently hidden by a default range that's smaller than their values.
+        if (pRes.data.length > 0) {
+          const computedMaxPrice = computeRangeCeiling(pRes.data.map(getProductPrice), DEFAULT_MAX_PRICE);
+          const computedMaxWeight = computeRangeCeiling(pRes.data.map(getProductWeightGrams), DEFAULT_MAX_WEIGHT_G);
+          setMaxPrice(computedMaxPrice);
+          setMaxWeight(computedMaxWeight);
+          setPriceRange([0, computedMaxPrice]);
+          setWeightRange([0, computedMaxWeight]);
+        }
+      }
       if (cRes.data) setCategories(cRes.data);
     } catch (err: any) {
       toast.error("Failed to load data: " + err.message);
@@ -53,16 +88,6 @@ export default function CreateCataloguePage() {
       setLoading(false);
     }
   }
-
-  const getProductPrice = (p: any) => {
-    if (p.direct_rate) return Number(p.direct_rate);
-    if (p.rate_code) return Number(p.rate_code.value);
-    return 0;
-  };
-
-  const getProductWeightGrams = (p: any) => {
-    return p.weight_kg ? Number(p.weight_kg) * 1000 : 0;
-  };
 
   const filteredProducts = products.filter(p => {
     if (search.trim() && !p.name.toLowerCase().includes(search.trim().toLowerCase())) return false;
@@ -165,9 +190,9 @@ export default function CreateCataloguePage() {
                 <label className="font-medium text-card-foreground">Price Range (₹)</label>
                 <span className="text-muted-foreground text-xs">₹{priceRange[0]} – ₹{priceRange[1]}</span>
               </div>
-              <Slider value={priceRange} min={0} max={100000} step={100} onValueChange={(v) => setPriceRange(v as number[])} />
+              <Slider value={priceRange} min={0} max={maxPrice} step={100} onValueChange={(v) => setPriceRange(v as number[])} />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>₹0</span><span>₹1,00,000</span>
+                <span>₹0</span><span>₹{maxPrice.toLocaleString('en-IN')}</span>
               </div>
             </div>
             <div className="space-y-3">
@@ -175,9 +200,9 @@ export default function CreateCataloguePage() {
                 <label className="font-medium text-card-foreground">Weight Range (g)</label>
                 <span className="text-muted-foreground text-xs">{weightRange[0]}g – {weightRange[1]}g</span>
               </div>
-              <Slider value={weightRange} min={0} max={10000} step={10} onValueChange={(v) => setWeightRange(v as number[])} />
+              <Slider value={weightRange} min={0} max={maxWeight} step={10} onValueChange={(v) => setWeightRange(v as number[])} />
               <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                <span>0g</span><span>10,000g</span>
+                <span>0g</span><span>{maxWeight.toLocaleString('en-IN')}g</span>
               </div>
             </div>
           </div>

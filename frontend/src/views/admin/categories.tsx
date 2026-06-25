@@ -149,7 +149,7 @@ export default function CategoriesPage() {
               <Folder className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <h2 className="text-lg font-heading font-semibold text-foreground mb-1">No categories found</h2>
               <p className="text-muted-foreground mb-6">Create categories to organize your library.</p>
-              <Button onClick={() => setIsDialogOpen(true)}><Plus className="h-4 w-4 mr-2" /> Add Category</Button>
+              <Button onClick={openAddDialog}><Plus className="h-4 w-4 mr-2" /> Add Category</Button>
             </div>
           )}
         </div>

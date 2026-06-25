@@ -284,7 +284,7 @@ export default function EditProductPage() {
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:liquid-glass hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>

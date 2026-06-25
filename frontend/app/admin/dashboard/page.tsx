@@ -66,7 +66,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 recentProducts.map((prod, i) => (
-                  <div key={i} className="flex items-center justify-between py-4 border-b border-border last:border-0 hover:liquid-glass border-transparent hover:bg-white/40 transition-colors px-2 -mx-2 rounded-3xl">
+                  <div key={i} className="flex items-center justify-between py-4 border-b border-border last:border-0 hover:bg-white/40 transition-colors px-2 -mx-2 rounded-3xl">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-3xl bg-muted flex items-center justify-center shrink-0">
                         <Package className="h-5 w-5 text-muted-foreground" />

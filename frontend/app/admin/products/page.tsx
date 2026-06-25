@@ -10,23 +10,7 @@ import { SearchableCombobox } from "@/components/SearchableCombobox";
 import { useProductController } from "@/hooks/useProductController";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-
-function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = '', inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') {
-      if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
-    } else if (line[i] === ',' && !inQuotes) {
-      result.push(current.trim()); current = '';
-    } else {
-      current += line[i];
-    }
-  }
-  result.push(current.trim());
-  return result;
-}
+import { parseCSVLine, buildCsv, mapCsvRowToProduct } from "@/lib/csv";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -63,9 +47,7 @@ export default function ProductsPage() {
         p.rate_code?.code ?? ''
       ]);
 
-      const csv = [headers, ...rows]
-        .map(r => r.map((c: any) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-        .join('\n');
+      const csv = buildCsv(headers, rows);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -96,47 +78,38 @@ export default function ProductsPage() {
         const headers = parseCSVLine(lines[0]);
         const rows = lines.slice(1).map(parseCSVLine);
 
-        const col = (name: string) => headers.findIndex(h => h.toLowerCase().includes(name.toLowerCase()));
-        const nameIdx = col('name');
-        if (nameIdx === -1) { toast.error("CSV must have a 'Name' column"); return; }
-
-        const catIdx = col('category');
-        const weightIdx = col('weight');
-        const heightIdx = col('height');
-        const lengthIdx = col('length');
-        const rateTypeIdx = col('rate type');
-        const directRateIdx = col('direct rate');
+        if (!headers.some(h => h.toLowerCase().includes('name'))) {
+          toast.error("CSV must have a 'Name' column");
+          return;
+        }
 
         const { data: cats } = await supabase.from('categories').select('id, name');
         const catMap = new Map(cats?.map((c: any) => [c.name.toLowerCase(), c.id]) ?? []);
 
         let imported = 0, skipped = 0;
         for (const row of rows) {
-          const name = row[nameIdx]?.trim();
-          if (!name) { skipped++; continue; }
+          const mapped = mapCsvRowToProduct(headers, row);
+          if (!mapped) { skipped++; continue; }
 
           let categoryId: string | null = null;
-          if (catIdx !== -1 && row[catIdx]?.trim()) {
-            const catName = row[catIdx].trim();
-            if (catMap.has(catName.toLowerCase())) {
-              categoryId = catMap.get(catName.toLowerCase())!;
+          if (mapped.categoryName) {
+            const catKey = mapped.categoryName.toLowerCase();
+            if (catMap.has(catKey)) {
+              categoryId = catMap.get(catKey)!;
             } else {
-              const { data: newCat } = await supabase.from('categories').insert({ name: catName }).select().single();
-              if (newCat) { categoryId = newCat.id; catMap.set(catName.toLowerCase(), newCat.id); }
+              const { data: newCat } = await supabase.from('categories').insert({ name: mapped.categoryName }).select().single();
+              if (newCat) { categoryId = newCat.id; catMap.set(catKey, newCat.id); }
             }
           }
 
-          const rateType = rateTypeIdx !== -1 ? (row[rateTypeIdx]?.trim() || 'per_piece') : 'per_piece';
-          const directRate = directRateIdx !== -1 ? (parseFloat(row[directRateIdx]) || null) : null;
-
           const { error } = await supabase.from('products').insert({
-            name,
+            name: mapped.name,
             category_id: categoryId,
-            weight_kg: weightIdx !== -1 ? (parseFloat(row[weightIdx]) || null) : null,
-            height_inches: heightIdx !== -1 ? (row[heightIdx]?.trim() || null) : null,
-            length_inches: lengthIdx !== -1 ? (row[lengthIdx]?.trim() || null) : null,
-            rate_type: rateType,
-            direct_rate: directRate,
+            weight_kg: mapped.weightKg,
+            height_inches: mapped.heightInches,
+            length_inches: mapped.lengthInches,
+            rate_type: mapped.rateType,
+            direct_rate: mapped.directRate,
           });
           if (!error) imported++; else skipped++;
         }

@@ -116,17 +116,17 @@ export default function LandingPage() {
             {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-      </div>
 
-      {mobileMenuOpen && (
-        <div className="liquid-glass p-6 flex flex-col gap-6 md:hidden text-center shadow-lg absolute left-0 right-0 top-full z-50 rounded-b-3xl border-t-0 mt-2 mx-4">
-          <button onClick={(e) => scrollToSection(e, 'home')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Home</button>
-          <button onClick={(e) => scrollToSection(e, 'collection')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Collection</button>
-          <button onClick={(e) => scrollToSection(e, 'about')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">About Us</button>
-          <button onClick={(e) => scrollToSection(e, 'contact')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Contact</button>
-          <Link href="/login" className="text-foreground uppercase text-xs tracking-widest font-semibold liquid-glass py-3 mx-4" onClick={() => setMobileMenuOpen(false)}>Admin Login</Link>
-        </div>
-      )}
+        {mobileMenuOpen && (
+          <div className="liquid-glass p-6 flex flex-col gap-6 md:hidden text-center shadow-lg absolute left-0 right-0 top-full z-50 rounded-b-3xl border-t-0 mt-2 mx-4">
+            <button onClick={(e) => scrollToSection(e, 'home')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Home</button>
+            <button onClick={(e) => scrollToSection(e, 'collection')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Collection</button>
+            <button onClick={(e) => scrollToSection(e, 'about')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">About Us</button>
+            <button onClick={(e) => scrollToSection(e, 'contact')} className="text-foreground uppercase text-xs tracking-widest font-semibold flex-1">Contact</button>
+            <Link href="/login" className="text-foreground uppercase text-xs tracking-widest font-semibold liquid-glass py-3 mx-4" onClick={() => setMobileMenuOpen(false)}>Admin Login</Link>
+          </div>
+        )}
+      </div>
 
       {/* Hero Section */}
       <section className="relative w-full h-[80vh] flex flex-col items-center justify-center text-center px-4 overflow-hidden">

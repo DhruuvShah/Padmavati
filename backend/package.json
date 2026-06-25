@@ -7,6 +7,9 @@
     "dev": "tsx server.ts",
     "build": "esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate"
   },
@@ -35,11 +38,14 @@
     "@types/node": "^22.14.0",
     "@types/pg": "^8.11.0",
     "@types/puppeteer-core": "^5.4.0",
+    "@types/supertest": "^7.2.0",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.31.10",
     "esbuild": "^0.25.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0",
-    "typescript": "~5.8.2"
+    "typescript": "~5.8.2",
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "node-domexception": "npm:domexception@^4.0.0"
