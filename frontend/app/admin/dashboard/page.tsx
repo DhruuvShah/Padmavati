@@ -105,7 +105,7 @@ export default function DashboardPage() {
 
             <div className="space-y-2">
               {recentProducts.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-8 text-center liquid-glass border-transparent rounded-3xl border mt-4">
+                <div className="text-sm text-muted-foreground py-8 text-center liquid-glass rounded-3xl border mt-4">
                   No products found. Start by adding a product.
                 </div>
               ) : (

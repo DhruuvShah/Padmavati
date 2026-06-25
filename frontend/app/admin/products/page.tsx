@@ -180,7 +180,7 @@ export default function ProductsPage() {
             placeholder="Search by name or SKU..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 liquid-glass shadow-none border-transparent h-10 w-full rounded-3xl"
+            className="pl-9 liquid-glass shadow-none h-10 w-full rounded-3xl"
           />
         </div>
         <div className="w-full sm:w-50">
@@ -269,7 +269,7 @@ export default function ProductsPage() {
             </div>
           ))}
           {filteredProducts.length === 0 && (
-            <div className="col-span-full py-16 text-center liquid-glass border-transparent rounded-3xl flex flex-col items-center justify-center">
+            <div className="col-span-full py-16 text-center liquid-glass rounded-3xl flex flex-col items-center justify-center">
               <Package className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <h2 className="text-lg font-heading font-semibold text-foreground mb-1">No products found</h2>
               <p className="text-muted-foreground mb-6">Add a product to get started with your catalogue.</p>

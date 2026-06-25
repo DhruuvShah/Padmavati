@@ -337,7 +337,7 @@ export default function EditProductPage() {
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>
@@ -349,7 +349,7 @@ export default function EditProductPage() {
                 ) : (
                   <>
                     <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                    <span className="text-xs text-muted-foreground py-1 px-3 border border-transparent rounded-full liquid-glass">Upload Photo</span>
+                    <span className="text-xs text-muted-foreground py-1 px-3 border rounded-full liquid-glass">Upload Photo</span>
                   </>
                 )}
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
@@ -367,7 +367,7 @@ export default function EditProductPage() {
                 <p className="text-xs text-muted-foreground">Permanent product code. Leave blank to have one re-assigned automatically.</p>
               </div>
               {(barcodeUrl || qrCodeUrl) && (
-                <div className="flex items-center gap-4 p-4 liquid-glass border-transparent rounded-3xl">
+                <div className="flex items-center gap-4 p-4 liquid-glass rounded-3xl">
                   {barcodeUrl && (
                     <div className="flex flex-col items-center gap-1">
                       <img src={barcodeUrl} alt="Barcode" className="h-16 object-contain bg-white rounded-lg p-1" />
@@ -444,12 +444,12 @@ export default function EditProductPage() {
               </div>
             </fieldset>
 
-            <div className="p-6 liquid-glass border-transparent border rounded-3xl">
+            <div className="p-6 liquid-glass border rounded-3xl">
               {rateType === 'per_kg' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2 p-1 bg-muted rounded-3xl max-w-sm">
-                    <button onClick={() => setRateMode('code')} className={`flex-1 py-1.5 text-xs font-semibold overflow-hidden transition relative ${rateMode === 'code' ? 'liquid-glass shadow-none border-transparent text-foreground' : 'text-muted-foreground'}`}>Rate Code</button>
-                    <button onClick={() => setRateMode('direct')} className={`flex-1 py-1.5 text-xs font-semibold overflow-hidden transition relative ${rateMode === 'direct' ? 'liquid-glass shadow-none border-transparent text-foreground' : 'text-muted-foreground'}`}>Direct Rate</button>
+                    <button onClick={() => setRateMode('code')} className={`flex-1 py-1.5 text-xs font-semibold overflow-hidden transition relative ${rateMode === 'code' ? 'liquid-glass shadow-none text-foreground' : 'text-muted-foreground'}`}>Rate Code</button>
+                    <button onClick={() => setRateMode('direct')} className={`flex-1 py-1.5 text-xs font-semibold overflow-hidden transition relative ${rateMode === 'direct' ? 'liquid-glass shadow-none text-foreground' : 'text-muted-foreground'}`}>Direct Rate</button>
                   </div>
                   {rateMode === 'code' ? (
                     <div className="max-w-sm space-y-2">
@@ -489,7 +489,7 @@ export default function EditProductPage() {
             {variants.length > 0 && (
               <div className="space-y-3">
                 {variants.map((variant, index) => (
-                  <div key={index} className="flex gap-4 items-end p-4 liquid-glass border-transparent relative pr-12 rounded-3xl">
+                  <div key={index} className="flex gap-4 items-end p-4 liquid-glass relative pr-12 rounded-3xl">
                     <button onClick={() => setVariants(variants.filter((_, i) => i !== index))} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive p-2 rounded-full transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>

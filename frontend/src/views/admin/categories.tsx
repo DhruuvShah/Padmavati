@@ -163,7 +163,7 @@ export default function CategoriesPage() {
             </div>
           ))}
           {categories.length === 0 && (
-            <div className="col-span-full py-16 text-center liquid-glass border-transparent rounded-3xl flex flex-col items-center justify-center">
+            <div className="col-span-full py-16 text-center liquid-glass rounded-3xl flex flex-col items-center justify-center">
               <Folder className="h-12 w-12 text-muted-foreground/30 mb-4" />
               <h2 className="text-lg font-heading font-semibold text-foreground mb-1">No categories found</h2>
               <p className="text-muted-foreground mb-6">Create categories to organize your library.</p>

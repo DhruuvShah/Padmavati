@@ -145,7 +145,7 @@ export default function PartiesPage() {
             placeholder="Search parties..." 
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9 liquid-glass shadow-none border-transparent h-10 w-full rounded-3xl"
+            className="pl-9 liquid-glass shadow-none h-10 w-full rounded-3xl"
           />
         </div>
 
@@ -191,7 +191,7 @@ export default function PartiesPage() {
                     {loadingProducts ? (
                       <div className="text-sm text-muted-foreground py-2 text-center">Loading products...</div>
                     ) : partyProducts.length === 0 ? (
-                      <div className="text-sm text-muted-foreground py-2 text-center liquid-glass border-transparent rounded-3xl">No products found for this party.</div>
+                      <div className="text-sm text-muted-foreground py-2 text-center liquid-glass rounded-3xl">No products found for this party.</div>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {partyProducts.map(prod => (
@@ -212,7 +212,7 @@ export default function PartiesPage() {
               </div>
             ))}
             {filteredParties.length === 0 && (
-              <div className="py-12 text-center text-muted-foreground liquid-glass border-transparent rounded-3xl">
+              <div className="py-12 text-center text-muted-foreground liquid-glass rounded-3xl">
                 No parties found.
               </div>
             )}

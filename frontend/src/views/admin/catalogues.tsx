@@ -99,7 +99,7 @@ export default function CataloguesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search catalogues..." 
-            className="pl-9 liquid-glass shadow-none border-transparent h-10 w-full rounded-3xl"
+            className="pl-9 liquid-glass shadow-none h-10 w-full rounded-3xl"
           />
         </div>
 
@@ -108,7 +108,7 @@ export default function CataloguesPage() {
             {[1,2,3,4].map(i => <div key={i} className="h-48 bg-muted/20 animate-pulse rounded-3xl"></div>)}
           </div>
         ) : filteredCatalogues.length === 0 ? (
-          <div className="text-muted-foreground p-12 text-center liquid-glass border-transparent rounded-3xl">No catalogues found.</div>
+          <div className="text-muted-foreground p-12 text-center liquid-glass rounded-3xl">No catalogues found.</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredCatalogues.map((cat) => (
@@ -127,7 +127,7 @@ export default function CataloguesPage() {
                   Created {new Date(cat.created_at).toLocaleDateString()}
                 </p>
                 
-                <div className="liquid-glass border-transparent hover:bg-white/40 p-3 rounded-3xl border mb-4">
+                <div className="liquid-glass hover:bg-white/40 p-3 rounded-3xl border mb-4">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-1">
                     <LinkIcon className="h-3 w-3" /> Share Link
                   </div>

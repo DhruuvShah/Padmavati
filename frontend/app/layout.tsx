@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import { GlassProvider, GLASS_INIT_SCRIPT } from "@/components/ui/glass-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,9 +33,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        {/* Runs before hydration so a returning user who turned glass off
+            never sees a one-frame flash of it being on first. */}
+        <Script id="glass-init" strategy="beforeInteractive">
+          {GLASS_INIT_SCRIPT}
+        </Script>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          {children}
-          <Toaster position="bottom-right" />
+          <GlassProvider>
+            {children}
+            <Toaster position="bottom-right" />
+          </GlassProvider>
         </ThemeProvider>
       </body>
     </html>

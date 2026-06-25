@@ -168,7 +168,7 @@ export default function CreateCataloguePage() {
                   placeholder="Search products..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="pl-9 liquid-glass shadow-none border-transparent rounded-3xl"
+                  className="pl-9 liquid-glass shadow-none rounded-3xl"
                 />
               </div>
             </div>
@@ -251,7 +251,7 @@ export default function CreateCataloguePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProducts.length === 0 && !loading && (
-                <div className="col-span-full py-16 text-center liquid-glass border-transparent rounded-3xl flex flex-col items-center justify-center">
+                <div className="col-span-full py-16 text-center liquid-glass rounded-3xl flex flex-col items-center justify-center">
                   <Package className="h-12 w-12 text-muted-foreground/30 mb-4" />
                   <h2 className="text-lg font-heading font-semibold text-foreground mb-1">
                     {products.length === 0 ? "No products yet" : "No products match your filters"}

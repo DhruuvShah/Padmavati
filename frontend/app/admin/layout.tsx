@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { GlassToggle } from "@/components/ui/glass-toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -259,6 +260,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <div className="flex items-center gap-3 sm:gap-6">
             <ThemeToggle />
+            <GlassToggle />
 
             <div className="hidden sm:block h-8 w-px bg-border"></div>
 
