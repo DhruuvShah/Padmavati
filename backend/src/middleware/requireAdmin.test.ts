@@ -47,6 +47,7 @@ describe("requireAdmin", () => {
 
     expect(next).toHaveBeenCalledOnce();
     expect(req.supabaseToken).toBe("good-token");
+    expect(req.user).toEqual({ id: "u1", email: undefined });
     expect(res.status).not.toHaveBeenCalled();
   });
 

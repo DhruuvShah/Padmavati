@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Option B Implementation Plan — SKU + Barcode/QR</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --faint: #86868b;
+    --line: rgba(0,0,0,0.09);
+    --glass: rgba(255,255,255,0.62);
+    --inset: rgba(0,0,0,0.035);
+    --pill-bg: #1d1d1f;
+    --pill-fg: #ffffff;
+    --free: #1d7d4f;
+    --free-bg: rgba(29,125,79,0.1);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 860px; margin: 0 auto; padding: 64px 40px 100px; }
+
+  header { text-align: center; margin-bottom: 36px; }
+  header h1 { font-size: 27px; margin: 0 0 8px; font-weight: 700; letter-spacing: -.02em; }
+  header p { margin: 2px 0; color: var(--muted); font-size: 14px; }
+  .meta-line { text-align: center; color: var(--faint); font-size: 12.5px; margin-bottom: 40px; letter-spacing: .01em; }
+
+  .lede { font-size: 15px; color: var(--muted); margin-bottom: 14px; }
+  .trust { font-size: 13.6px; color: var(--muted); margin-bottom: 44px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .trust strong { color: var(--ink); }
+
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(255,255,255,0.55);
+    border-radius: 28px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.03), 0 24px 60px rgba(0,0,0,0.08);
+    padding: 40px 44px;
+    margin-bottom: 28px;
+  }
+  .tag { display: inline-block; background: var(--pill-bg); color: var(--pill-fg); font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; padding: 6px 15px; border-radius: 999px; margin-bottom: 16px; }
+  .tag.free { background: var(--free-bg); color: var(--free); }
+  .card h2 { font-size: 23px; margin: 0 0 6px; font-weight: 700; letter-spacing: -.015em; }
+  .card .sub { font-size: 13.6px; color: var(--muted); margin-bottom: 22px; }
+
+  .phase-meta { display: flex; gap: 28px; margin-bottom: 24px; flex-wrap: wrap; }
+  .phase-meta div { font-size: 12.5px; color: var(--muted); }
+  .phase-meta strong { display: block; font-size: 18px; color: var(--ink); font-weight: 700; margin-top: 2px; }
+
+  .flist { margin: 0 0 8px; }
+  .flist .ftitle { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); margin-bottom: 10px; }
+  .flist ul { list-style: none; padding: 0; margin: 0; }
+  .flist li { font-size: 13.4px; padding: 7px 0 7px 24px; position: relative; border-bottom: 1px solid var(--line); }
+  .flist li:last-child { border-bottom: none; }
+  .flist li.yes::before { content: "✓"; position: absolute; left: 1px; font-weight: 700; color: var(--ink); }
+  .flist li.lock::before { content: "🔒"; position: absolute; left: 0px; font-size: 11px; }
+  .flist li.lock { color: var(--muted); }
+
+  h3.block-title { font-size: 12.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); font-weight: 700; margin: 26px 0 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.8px; margin-bottom: 4px; }
+  th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--line); }
+  th { font-weight: 700; border-bottom: 1.5px solid var(--ink); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.total th, tr.total td { border-top: 1.5px solid var(--ink); border-bottom: none; padding-top: 11px; font-size: 13.2px; }
+
+  .goal-row { display: flex; gap: 24px; margin-bottom: 22px; padding: 14px 16px; background: var(--inset); border-radius: 14px; flex-wrap: wrap; }
+  .goal-row div { flex: 1; min-width: 200px; }
+  .goal-row .k { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--faint); font-weight: 700; margin-bottom: 4px; }
+  .goal-row .v { font-size: 13.4px; color: var(--ink); }
+
+  .milestones-plain .m-row { display: flex; justify-content: space-between; padding: 9px 0; font-size: 13.4px; border-bottom: 1px solid var(--line); }
+  .milestones-plain .m-row:last-child { border-bottom: none; }
+  .milestones-plain .m-row .amt { font-weight: 700; }
+
+  h2.section { font-size: 19px; margin: 48px 0 12px; font-weight: 700; }
+  p.body-copy { font-size: 13.8px; color: var(--muted); }
+
+  .tooltip-demo {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--inset); border: 1px solid var(--line); border-radius: 10px;
+    padding: 8px 14px; font-size: 12.6px; color: var(--faint); margin: 6px 8px 6px 0;
+    position: relative; cursor: not-allowed;
+  }
+  .tooltip-demo .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+  .tooltip-demo .bubble {
+    position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+    background: var(--pill-bg); color: var(--pill-fg); font-size: 11.5px; font-weight: 600;
+    padding: 6px 10px; border-radius: 8px; white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: opacity .15s ease;
+  }
+  .tooltip-demo:hover .bubble { opacity: 1; }
+
+  .signature { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: 13.6px; }
+  .closing { font-size: 14px; color: var(--muted); margin-top: 28px; }
+
+  .pdf-btn {
+    position: fixed; top: 24px; right: 24px; display: flex; align-items: center; gap: 8px;
+    background: var(--pill-bg); color: var(--pill-fg); border: none; border-radius: 999px;
+    padding: 11px 20px; font-size: 13.5px; font-weight: 600; font-family: inherit; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18); transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .pdf-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(0,0,0,0.22); }
+  .pdf-btn:active { transform: translateY(0); }
+  .pdf-btn svg { width: 15px; height: 15px; }
+
+  @media print {
+    .pdf-btn { display: none !important; }
+    body { background: #ffffff; }
+    .card { box-shadow: none; border: 1px solid var(--line); backdrop-filter: none; -webkit-backdrop-filter: none; background: #ffffff; }
+    .tooltip-demo .bubble { display: none; }
+  }
+</style>
+</head>
+<body>
+<button class="pdf-btn" onclick="window.print()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+  Save as PDF
+</button>
+<div class="page">
+
+  <header>
+    <h1>Option B — Implementation Plan</h1>
+    <p>SKU Auto-Generation + Barcode/QR · Phase by phase</p>
+    <p>Padmavati Corporation</p>
+  </header>
+  <div class="meta-line">Prepared for Padmavati Corporation · Prepared by Dhruv Shah · 25 June 2026</div>
+
+  <p class="lede">This is the execution plan for the approved Option B scope — SKU auto-generation and automatic Barcode/QR codes, ₹50,000, 46 hours. No new scope has been added here; every line below maps directly to the cost breakdown already quoted. This document just sequences it into phases with clear goals and exit criteria, and adds one no-cost phase (0) to keep the delivered build honest about what's actually paid for.</p>
+
+  <p class="trust">Quick status check, since we just audited the live app: <strong>0% of Option B exists today.</strong> No SKU field, no barcode, no QR — confirmed by searching the entire codebase. Everything below starts from zero. Meanwhile, two features got built that were never part of either quotation — the catalogue access-request/OTP system and Parties management. Phase 0 addresses that directly.</p>
+
+  <!-- PHASE 0 -->
+  <div class="card">
+    <span class="tag free">Phase 0 · No Cost</span>
+    <h2>Scope Hygiene — Disable, Don't Delete</h2>
+    <div class="sub">Make the delivered admin panel match exactly what's been paid for, without throwing away finished work.</div>
+
+    <div class="goal-row">
+      <div><div class="k">Goal</div><div class="v">Hide out-of-scope features from the admin UI</div></div>
+      <div><div class="k">Effort</div><div class="v">~2 hours, unbilled</div></div>
+      <div><div class="k">Exit Criteria</div><div class="v">Sidebar shows only paid features; extras are visibly "coming soon"</div></div>
+    </div>
+
+    <h3 class="block-title">What Gets Disabled</h3>
+    <div class="flist">
+      <ul>
+        <li class="lock">Access Requests — the OTP-gated catalogue sharing/approval workflow</li>
+        <li class="lock">Parties — the customer code-name management page</li>
+      </ul>
+    </div>
+
+    <h3 class="block-title">How It Behaves</h3>
+    <p class="body-copy">Both nav items stay visible but greyed out and unclickable. Hovering shows a short tooltip instead of an error — something like:</p>
+    <div style="margin: 10px 0 4px;">
+      <span class="tooltip-demo">
+        <span class="dot"></span> Access Requests
+        <span class="bubble">Coming in a future update</span>
+      </span>
+      <span class="tooltip-demo">
+        <span class="dot"></span> Parties
+        <span class="bubble">Available in a later phase</span>
+      </span>
+    </div>
+    <p class="body-copy" style="margin-top:14px;">Nothing is deleted — the code, routes, and database tables stay exactly as built. The moment either feature is actually in scope (Option A, or its own add-on), it's a one-line flip back on. No rebuild, no re-testing from scratch.</p>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="card">
+    <span class="tag">Phase 1</span>
+    <h2>SKU Auto-Generation</h2>
+    <div class="sub">Every product gets a permanent, unique, category-prefixed code the moment it's saved.</div>
+
+    <div class="goal-row">
+      <div><div class="k">Goal</div><div class="v">No product exists without a valid SKU</div></div>
+      <div><div class="k">Effort</div><div class="v">14 hours</div></div>
+      <div><div class="k">Exit Criteria</div><div class="v">All 7,000+ existing products backfilled; new ones auto-assigned on save</div></div>
+    </div>
+
+    <table>
+      <tr><th>Task</th><th class="num">Hours</th></tr>
+      <tr><td>Permanent SKU field in the database</td><td class="num">1</td></tr>
+      <tr><td>Admin-editable category → prefix mapping (GAN, LAX, HAN…)</td><td class="num">3</td></tr>
+      <tr><td>Auto-incrementing sequence per prefix, race-safe</td><td class="num">4</td></tr>
+      <tr><td>Auto-assign SKU the moment a product is saved</td><td class="num">2</td></tr>
+      <tr><td>Manual override with re-validation</td><td class="num">2</td></tr>
+      <tr><td>One-click backfill for existing products</td><td class="num">2</td></tr>
+      <tr class="total"><th>Total</th><th class="num">14 hrs</th></tr>
+    </table>
+    <p class="body-copy" style="margin-top:10px;">Sequenced first because Phase 2 generates barcodes and QR codes <em>from</em> the SKU — there's nothing to encode until this exists.</p>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="card">
+    <span class="tag">Phase 2</span>
+    <h2>Barcode + QR Auto-Generation</h2>
+    <div class="sub">Every SKU instantly gets a scannable barcode and QR code, visible everywhere it matters.</div>
+
+    <div class="goal-row">
+      <div><div class="k">Goal</div><div class="v">Scanning any product's code opens that product</div></div>
+      <div><div class="k">Effort</div><div class="v">20 hours</div></div>
+      <div><div class="k">Exit Criteria</div><div class="v">Codes appear on product list, detail page &amp; catalogue PDF; phone scan works</div></div>
+    </div>
+
+    <table>
+      <tr><th>Task</th><th class="num">Hours</th></tr>
+      <tr><td>Barcode (Code128) image generated automatically from the SKU</td><td class="num">4</td></tr>
+      <tr><td>QR code generated automatically, linking to the product</td><td class="num">4</td></tr>
+      <tr><td>Auto-triggered the instant a SKU is assigned</td><td class="num">3</td></tr>
+      <tr><td>Generated images stored in cloud storage</td><td class="num">2</td></tr>
+      <tr><td>Shown on product list, detail page &amp; catalogue PDF</td><td class="num">5</td></tr>
+      <tr><td>Scan-to-product flow from a phone camera</td><td class="num">2</td></tr>
+      <tr class="total"><th>Total</th><th class="num">20 hrs</th></tr>
+    </table>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div class="card">
+    <span class="tag">Phase 3</span>
+    <h2>Testing, Revisions &amp; Handover</h2>
+    <div class="sub">Prove it holds up at real scale, then hand it over properly.</div>
+
+    <div class="goal-row">
+      <div><div class="k">Goal</div><div class="v">Zero duplicate/mistyped codes at full catalog size</div></div>
+      <div><div class="k">Effort</div><div class="v">12 hours</div></div>
+      <div><div class="k">Exit Criteria</div><div class="v">Printed labels scan correctly; staff can use it unassisted</div></div>
+    </div>
+
+    <table>
+      <tr><th>Task</th><th class="num">Hours</th></tr>
+      <tr><td>Bulk-generation performance test across 7,000+ products</td><td class="num">3</td></tr>
+      <tr><td>Edge-case testing (renamed categories, override conflicts)</td><td class="num">2</td></tr>
+      <tr><td>Real-world print &amp; scan testing on physical labels</td><td class="num">2</td></tr>
+      <tr><td>One round of revisions</td><td class="num">3</td></tr>
+      <tr><td>Staff walkthrough on the new workflow</td><td class="num">2</td></tr>
+      <tr class="total"><th>Total</th><th class="num">12 hrs</th></tr>
+    </table>
+  </div>
+
+  <h2 class="section">Payment Tied to Phases</h2>
+  <p class="body-copy">Same ₹50,000 total already agreed — just mapped to delivery instead of one lump sum.</p>
+  <div class="milestones-plain">
+    <div class="m-row"><span>On confirmation — Phase 0 + Phase 1 begin</span><span class="amt">₹20,000</span></div>
+    <div class="m-row"><span>When every product has a working SKU, barcode &amp; QR (Phase 2 done)</span><span class="amt">₹20,000</span></div>
+    <div class="m-row"><span>On final testing, revisions &amp; handover (Phase 3 done)</span><span class="amt">₹10,000</span></div>
+  </div>
+
+  <h2 class="section">Sequencing, At a Glance</h2>
+  <p class="body-copy">Phase 0 → Phase 1 → Phase 2 → Phase 3, in that order. Phase 0 runs first and costs nothing — it's a UI-level switch, not new engineering, so it doesn't push out the timeline. Phase 2 cannot start before Phase 1 finishes, since it generates codes from the SKU Phase 1 creates. Phase 3 runs last by definition — it's what proves Phases 1–2 actually hold up.</p>
+
+  <div class="signature">
+    <div>Dhruv Shah<br>dhruv27shah@gmail.com</div>
+    <div style="text-align:right">For Padmavati Corporation</div>
+  </div>
+
+</div>
+</body>
+</html>

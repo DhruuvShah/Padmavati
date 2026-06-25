@@ -16,7 +16,8 @@ import {
   Search,
   Check,
   X,
-  Menu
+  Menu,
+  ScanLine
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
@@ -25,13 +26,13 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const currentPath = usePathname();
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
   const [userEmail, setUserEmail] = useState("");
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setUserEmail(session.user.email || "");
       setIsAuthenticated(true);
       setAuthLoading(false);
-      fetchPendingRequests(session.access_token);
+      // Access Requests is disabled (Phase 0) — no need to poll for it.
     };
 
     checkAuth();
@@ -86,12 +87,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router]);
 
   const fetchPendingRequests = async (token?: string) => {
-    const { count } = await supabase.from('access_requests')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    setPendingCount(count || 0);
-
     const accessToken = token || (await supabase.auth.getSession()).data.session?.access_token;
     if (!accessToken) return;
 
@@ -138,11 +133,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/admin/products", icon: Package },
+    { name: "Scan", href: "/admin/scan", icon: ScanLine },
     { name: "Categories", href: "/admin/categories", icon: FolderOpen },
-    { name: "Parties", href: "/admin/parties", icon: Building2 },
     { name: "Rates", href: "/admin/rates", icon: IndianRupee },
     { name: "Create Catalogue", href: "/admin/create-catalogue", icon: FileText },
     { name: "My Catalogues", href: "/admin/catalogues", icon: Files },
+  ];
+
+  // Built, but outside the scope of what's been quoted/paid for so far.
+  // Kept disabled rather than removed — re-enabling later is a one-line flip.
+  const disabledNavItems = [
+    { name: "Parties", icon: Building2, comingSoonText: "Available in a later phase" },
+    { name: "Access Requests", icon: Bell, comingSoonText: "Coming in a future update" },
   ];
 
   if (authLoading) {
@@ -204,29 +206,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           <div className="space-y-1">
             <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase px-3 mb-2">Admin</p>
-            <Link
-              href="/admin/access-requests"
-              onClick={() => setMobileSidebarOpen(false)}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-3xl text-sm transition-colors cursor-pointer w-full ${
-                currentPath.startsWith("/admin/access-requests")
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-foreground font-medium hover:bg-primary/10 hover:text-primary"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Bell className="h-4 w-4 relative">
-                  {pendingCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full border border-background"></span>
-                  )}
-                </Bell>
-                Access Requests
-              </div>
-              {pendingCount > 0 && (
-                <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {pendingCount > 99 ? '99+' : pendingCount}
-                </span>
-              )}
-            </Link>
+            <TooltipProvider>
+              {disabledNavItems.map((item) => (
+                <Tooltip key={item.name}>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-3xl text-sm w-full text-left text-muted-foreground/60 cursor-not-allowed"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.name}
+                      </button>
+                    }
+                  />
+                  <TooltipContent>{item.comingSoonText}</TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
           </div>
         </nav>
 
@@ -279,7 +278,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <div className="flex-1 overflow-y-auto w-full">
-          <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 min-h-full">
+          <div className="max-w-400 mx-auto p-4 sm:p-6 lg:p-10 min-h-full">
             {children}
           </div>
         </div>

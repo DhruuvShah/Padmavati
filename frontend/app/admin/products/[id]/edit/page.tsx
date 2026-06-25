@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { generateProductCodes } from "@/lib/productCodes";
 
 type Variant = {
   id?: string;
@@ -32,6 +33,10 @@ export default function EditProductPage() {
   const [rateCodes, setRateCodes] = useState<any[]>([]);
 
   const [name, setName] = useState("");
+  const [sku, setSku] = useState("");
+  const [barcodeUrl, setBarcodeUrl] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [regeneratingCodes, setRegeneratingCodes] = useState(false);
   const [categoryId, setCategoryId] = useState("");
   const [partyId, setPartyId] = useState("");
   const [weightKg, setWeightKg] = useState("");
@@ -81,6 +86,9 @@ export default function EditProductPage() {
       if (error) throw error;
 
       setName(prod.name);
+      setSku(prod.sku || "");
+      setBarcodeUrl(prod.barcode_url || null);
+      setQrCodeUrl(prod.qr_code_url || null);
       setCategoryId(prod.category_id);
       setPartyId(prod.party_id || "");
       setWeightKg(prod.weight_kg || "");
@@ -165,6 +173,9 @@ export default function EditProductPage() {
 
       const payload = {
         name,
+        // Blank clears it back to null, which re-triggers auto-assignment
+        // on save — a free "reset to auto" escape hatch for the override.
+        sku: sku.trim() ? sku.trim().toUpperCase() : null,
         category_id: categoryId,
         party_id: partyId || null,
         weight_kg: weightKg || null,
@@ -176,7 +187,11 @@ export default function EditProductPage() {
         image_url: finalImageUrl
       };
 
-      await supabase.from("products").update(payload).eq("id", id);
+      const { error: updateError } = await supabase.from("products").update(payload).eq("id", id);
+      if (updateError) {
+        if (updateError.code === "23505") throw new Error("That SKU is already in use by another product");
+        throw updateError;
+      }
       await supabase.from("product_variants").delete().eq("product_id", id);
 
       if (variants.length > 0) {
@@ -192,6 +207,11 @@ export default function EditProductPage() {
       }
 
       toast.success("Product updated successfully");
+      try {
+        await generateProductCodes(id);
+      } catch {
+        toast.warning("Product saved, but its barcode/QR code couldn't be regenerated. Use \"Backfill SKUs\" on the Products page to retry.");
+      }
       router.push("/admin/products");
     } catch (err: any) {
       toast.error("Error saving product: " + err.message);
@@ -220,6 +240,21 @@ export default function EditProductPage() {
       },
       cancel: { label: 'Cancel', onClick: () => {} }
     });
+  };
+
+  const handleRegenerateCodes = async () => {
+    setRegeneratingCodes(true);
+    try {
+      await generateProductCodes(id);
+      const { data: prod } = await supabase.from("products").select("barcode_url, qr_code_url").eq("id", id).single();
+      setBarcodeUrl(prod?.barcode_url || null);
+      setQrCodeUrl(prod?.qr_code_url || null);
+      toast.success("Barcode and QR code regenerated");
+    } catch (err: any) {
+      toast.error("Failed to regenerate codes: " + err.message);
+    } finally {
+      setRegeneratingCodes(false);
+    }
   };
 
   const createCategory = async (catName: string) => {
@@ -276,7 +311,7 @@ export default function EditProductPage() {
       <div className="liquid-glass overflow-hidden rounded-3xl">
         <div className="p-4 sm:p-8 space-y-8">
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-            <div className="w-full sm:w-48 flex-shrink-0 space-y-3">
+            <div className="w-full sm:w-48 shrink-0 space-y-3">
               <Label>Product Image</Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -284,7 +319,7 @@ export default function EditProductPage() {
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-transparent border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>
@@ -308,6 +343,24 @@ export default function EditProductPage() {
                 <Label htmlFor="name">Product Name *</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Special Ambe maa" />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="sku">SKU</Label>
+                <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value.toUpperCase())} placeholder="Auto-assigned" className="font-mono" />
+                <p className="text-xs text-muted-foreground">Permanent product code. Leave blank to have one re-assigned automatically.</p>
+              </div>
+              {(barcodeUrl || qrCodeUrl) && (
+                <div className="flex items-center gap-4 p-4 liquid-glass border-transparent rounded-3xl">
+                  {barcodeUrl && (
+                    <img src={barcodeUrl} alt="Barcode" className="h-16 object-contain bg-white rounded-lg p-1" />
+                  )}
+                  {qrCodeUrl && (
+                    <img src={qrCodeUrl} alt="QR code" className="h-16 w-16 object-contain bg-white rounded-lg p-1" />
+                  )}
+                  <Button type="button" variant="outline" size="sm" onClick={handleRegenerateCodes} disabled={regeneratingCodes} className="ml-auto">
+                    {regeneratingCodes ? "Regenerating..." : "Regenerate"}
+                  </Button>
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label id="category-label">Category *</Label>
@@ -355,7 +408,7 @@ export default function EditProductPage() {
               </div>
             </fieldset>
 
-            <div className="p-6 liquid-glass border-transparent border border-border rounded-3xl">
+            <div className="p-6 liquid-glass border-transparent border rounded-3xl">
               {rateType === 'per_kg' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2 p-1 bg-muted rounded-3xl max-w-sm">

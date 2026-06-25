@@ -17,6 +17,7 @@ export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  const [skuPrefix, setSkuPrefix] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -45,6 +46,7 @@ export default function CategoriesPage() {
     setName("");
     setTagsInput("");
     setTags([]);
+    setSkuPrefix("");
     setIsDialogOpen(true);
   };
 
@@ -53,6 +55,7 @@ export default function CategoriesPage() {
     setName(cat.name);
     setTags(cat.tags || []);
     setTagsInput((cat.tags || []).join(", "));
+    setSkuPrefix(cat.sku_prefix || "");
     setIsDialogOpen(true);
   };
 
@@ -63,19 +66,27 @@ export default function CategoriesPage() {
     }
     setIsSubmitting(true);
     try {
+      // Leave sku_prefix out entirely (rather than sending an empty string)
+      // when blank, so the auto-derive-from-name trigger still kicks in for
+      // brand new categories instead of getting short-circuited.
+      const skuPrefixPayload = skuPrefix.trim() ? { sku_prefix: skuPrefix.trim().toUpperCase() } : {};
       if (editingId) {
-        const { error } = await supabase.from("categories").update({ name, tags }).eq("id", editingId);
+        const { error } = await supabase.from("categories").update({ name, tags, ...skuPrefixPayload }).eq("id", editingId);
         if (error) throw error;
         toast.success("Category updated");
       } else {
-        const { error } = await supabase.from("categories").insert({ name, tags });
+        const { error } = await supabase.from("categories").insert({ name, tags, ...skuPrefixPayload });
         if (error) throw error;
         toast.success("Category added");
       }
       setIsDialogOpen(false);
       fetchCategories();
     } catch (error: any) {
-      toast.error("Error saving category: " + error.message);
+      if (error.code === "23505") {
+        toast.error("That SKU prefix is already in use by another category");
+      } else {
+        toast.error("Error saving category: " + error.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -121,11 +132,18 @@ export default function CategoriesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {categories.map((cat) => (
             <div key={cat.id} className="liquid-glass p-6 flex items-start gap-4 group rounded-3xl">
-              <div className="h-10 w-10 bg-primary/10 rounded-3xl flex items-center justify-center flex-shrink-0 border border-primary/20">
+              <div className="h-10 w-10 bg-primary/10 rounded-3xl flex items-center justify-center shrink-0 border border-primary/20">
                 <Folder className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h2 className="font-heading font-semibold text-lg text-card-foreground line-clamp-1">{cat.name}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-heading font-semibold text-lg text-card-foreground line-clamp-1">{cat.name}</h2>
+                  {cat.sku_prefix && (
+                    <span className="text-[10px] font-bold text-primary uppercase bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                      {cat.sku_prefix}
+                    </span>
+                  )}
+                </div>
                 <div className="flex flex-wrap gap-2 mt-3">
                   {(cat.tags || []).map((tag: string) => (
                     <span key={tag} className="text-[10px] font-medium text-muted-foreground uppercase bg-muted px-2 py-1 rounded-full">
@@ -169,6 +187,17 @@ export default function CategoriesPage() {
                 onChange={(e) => setName(e.target.value)} 
                 placeholder="e.g. Ambe maa"
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="skuPrefix">SKU Prefix</Label>
+              <Input
+                id="skuPrefix"
+                value={skuPrefix}
+                onChange={(e) => setSkuPrefix(e.target.value.toUpperCase())}
+                placeholder="Auto-generated if left blank"
+                maxLength={10}
+              />
+              <p className="text-xs text-muted-foreground">Used to build SKUs for products in this category, e.g. GAN-001.</p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (comma-separated)</Label>

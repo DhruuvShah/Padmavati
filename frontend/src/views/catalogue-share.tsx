@@ -22,6 +22,15 @@ export default function CatalogueSharePage() {
     checkStatus();
   }, [id]);
 
+  // While waiting on the owner's decision, poll for updates so the page
+  // flips to approved/denied on its own — email delivery isn't guaranteed,
+  // and most visitors keep this tab open rather than coming back to it.
+  useEffect(() => {
+    if (state !== 'pending') return;
+    const interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [state, id]);
+
   useEffect(() => {
     if (resendCooldown > 0) {
       const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);

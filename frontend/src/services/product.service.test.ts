@@ -43,6 +43,30 @@ describe("ProductService.getProducts", () => {
   });
 });
 
+describe("ProductService.getIdBySku", () => {
+  beforeEach(() => {
+    productsBuilder = createMockQueryBuilder({ data: null, error: null });
+  });
+
+  it("returns the product id when a SKU matches", async () => {
+    productsBuilder = createMockQueryBuilder({ data: { id: "abc-123" }, error: null });
+    const ProductService = await importService();
+    expect(await ProductService.getIdBySku("GAN-001")).toBe("abc-123");
+  });
+
+  it("returns null when no product matches the SKU", async () => {
+    productsBuilder = createMockQueryBuilder({ data: null, error: null });
+    const ProductService = await importService();
+    expect(await ProductService.getIdBySku("NOPE-999")).toBeNull();
+  });
+
+  it("throws when the query errors", async () => {
+    productsBuilder = createMockQueryBuilder({ data: null, error: { message: "db down" } });
+    const ProductService = await importService();
+    await expect(ProductService.getIdBySku("GAN-001")).rejects.toEqual({ message: "db down" });
+  });
+});
+
 describe("ProductService.getCategories", () => {
   beforeEach(() => {
     categoriesBuilder = createMockQueryBuilder({ data: null, error: null });

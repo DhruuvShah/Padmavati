@@ -186,7 +186,7 @@ export default function PartiesPage() {
                 </div>
 
                 {expandedId === party.id && (
-                  <div className="border-t border-border px-14 py-4 liquid-glass border-transparent rounded-3xl">
+                  <div className="border-t px-14 py-4 liquid-glass border-transparent rounded-3xl">
                     <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Products from {party.code_name}</h3>
                     {loadingProducts ? (
                       <div className="text-sm text-muted-foreground py-2 text-center">Loading products...</div>

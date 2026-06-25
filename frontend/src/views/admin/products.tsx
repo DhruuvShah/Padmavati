@@ -180,7 +180,7 @@ export default function ProductsPage() {
             className="pl-9 liquid-glass shadow-none border-transparent h-10 w-full rounded-3xl"
           />
         </div>
-        <div className="w-full sm:w-[200px]">
+        <div className="w-full sm:w-50">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="rounded-3xl w-full h-10">
               <SelectValue placeholder="All Categories" />

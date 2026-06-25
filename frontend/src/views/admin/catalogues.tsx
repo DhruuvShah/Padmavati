@@ -127,7 +127,7 @@ export default function CataloguesPage() {
                   Created {new Date(cat.created_at).toLocaleDateString()}
                 </p>
                 
-                <div className="liquid-glass border-transparent hover:bg-white/40 p-3 rounded-3xl border border-border mb-4">
+                <div className="liquid-glass border-transparent hover:bg-white/40 p-3 rounded-3xl border mb-4">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-1">
                     <LinkIcon className="h-3 w-3" /> Share Link
                   </div>

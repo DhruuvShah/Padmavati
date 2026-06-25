@@ -244,7 +244,7 @@ export default function AdminLayout() {
 
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto w-full">
-          <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-10 min-h-full">
+          <div className="max-w-400 mx-auto p-4 sm:p-6 lg:p-10 min-h-full">
             <Outlet />
           </div>
         </div>

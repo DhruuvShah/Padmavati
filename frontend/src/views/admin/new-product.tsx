@@ -311,7 +311,7 @@ export default function NewProductPage() {
           
           {/* Image Upload */}
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-            <div className="w-full sm:w-48 flex-shrink-0 space-y-3">
+            <div className="w-full sm:w-48 shrink-0 space-y-3">
               <Label>Product Image</Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -319,7 +319,7 @@ export default function NewProductPage() {
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:liquid-glass hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-transparent border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:liquid-glass hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>
@@ -454,7 +454,7 @@ export default function NewProductPage() {
               </div>
             </fieldset>
 
-            <div className="p-6 liquid-glass border-transparent border border-border rounded-3xl">
+            <div className="p-6 liquid-glass border-transparent border rounded-3xl">
               {rateType === 'per_kg' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2 p-1 bg-muted rounded-3xl max-w-sm">

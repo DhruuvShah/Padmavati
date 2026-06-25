@@ -14,7 +14,7 @@ function FadeIn({ children, delay, duration = 1000 }: { children: React.ReactNod
 
   return (
     <div
-      className={`transition-opacity transition-transform ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
+      className={`transition ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
       style={{ transitionDuration: `${duration}ms` }}
     >
       {children}
@@ -86,7 +86,7 @@ export default function LandingPage() {
         <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[60%] rounded-full bg-cream/40 blur-[120px] mix-blend-multiply"></div>
       </div>
       {/* Top Navbar */}
-      <div className="relative z-10 w-full px-6 md:px-12 lg:px-16 py-6 flex items-center justify-between border-b border-foreground/10 liquid-glass sticky top-0 rounded-none border-t-0 border-l-0 border-r-0">
+      <div className="z-10 w-full px-6 md:px-12 lg:px-16 py-6 flex items-center justify-between border-b border-foreground/10 liquid-glass sticky top-0 rounded-none border-t-0 border-l-0 border-r-0">
         <Link href="/" className="outline-none block">
           <span className="block font-display text-2xl tracking-widest font-semibold text-brass-dark" role="heading" aria-level={2}>THE PADMAVATI CORPORATION</span>
         </Link>
@@ -142,7 +142,7 @@ export default function LandingPage() {
           <img src="https://images.unsplash.com/photo-1601053075253-06d20392f4ac?q=80&w=2000&auto=format&fit=crop" alt="Hero background" className="absolute inset-0 w-full h-full object-cover z-0" />
         </video>
         <div className="absolute inset-0 bg-black/50 z-0"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-warm-white via-transparent to-transparent opacity-40 z-0"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-warm-white via-transparent to-transparent opacity-40 z-0"></div>
 
         <div className="relative z-10 max-w-3xl flex flex-col items-center">
           <FadeIn delay={200} duration={1000}>
@@ -173,16 +173,16 @@ export default function LandingPage() {
       {/* Artisan Section */}
       <section id="about" className="relative z-10 py-24 px-6 md:px-12 lg:px-16 max-w-7xl mx-auto">
         <div className="flex items-center justify-center mb-16">
-          <div className="h-px bg-brass-light/50 flex-grow max-w-[200px]"></div>
+          <div className="h-px bg-brass-light/50 grow max-w-50"></div>
           <div className="px-4 text-[#D9BE6C]">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22C12 22 17 18 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 18 12 22 12 22Z"/><path d="M12 7V2"/><path d="M12 2C10.5 2 9 3 9 5C9 7 12 7 12 7C12 7 15 7 15 5C15 3 13.5 2 12 2Z"/></svg>
           </div>
-          <div className="h-px bg-brass-light/50 flex-grow max-w-[200px]"></div>
+          <div className="h-px bg-brass-light/50 grow max-w-50"></div>
         </div>
 
         <div className="grid md:grid-cols-2 gap-16 items-center">
-          <div className="relative liquid-glass p-2 shadow-sm flex items-center justify-center min-h-[400px] overflow-hidden">
-             <div className="absolute inset-0 bg-gradient-to-br from-warm-white to-brass-light opacity-30 mix-blend-multiply"></div>
+          <div className="relative liquid-glass p-2 shadow-sm flex items-center justify-center min-h-100 overflow-hidden">
+             <div className="absolute inset-0 bg-linear-to-br from-warm-white to-brass-light opacity-30 mix-blend-multiply"></div>
              <div className="z-10 text-center p-8">
                <Box className="w-16 h-16 mx-auto mb-4 text-brass-dark opacity-80" />
                <p className="text-brass-dark font-semibold tracking-widest uppercase text-xs">Premium Brass Artifacts</p>
@@ -219,13 +219,13 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-8 mb-16">
             <div className="liquid-glass overflow-hidden flex flex-col group transition duration-200 hover:shadow-xl hover:-translate-y-2 cursor-pointer focus-visible:ring-3 focus-visible:ring-primary/50 outline-none active:scale-[0.98]" tabIndex={0}>
-              <div className="aspect-[4/5] bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
+              <div className="aspect-4/5 bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-linear-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
                 <div className="z-10 bg-white/80 p-6 rounded-full backdrop-blur-sm border border-foreground/10 group-hover:scale-110 transition-transform duration-200">
                   <ShieldCheck className="w-12 h-12 text-brass-dark" />
                 </div>
               </div>
-              <div className="p-8 text-center flex-grow flex flex-col justify-between">
+              <div className="p-8 text-center grow flex flex-col justify-between">
                 <div>
                   <h3 className="font-display text-2xl text-foreground mb-2 font-normal group-hover:text-brass-dark transition-colors">Ambe Maa</h3>
                   <p className="text-brass-dark text-[10px] uppercase tracking-[0.15em] font-bold mb-4">Goddess of Power & Protection</p>
@@ -237,13 +237,13 @@ export default function LandingPage() {
             </div>
 
             <div className="liquid-glass overflow-hidden flex flex-col group transition duration-200 hover:shadow-xl hover:-translate-y-2 cursor-pointer focus-visible:ring-3 focus-visible:ring-primary/50 outline-none active:scale-[0.98]" tabIndex={0}>
-              <div className="aspect-[4/5] bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
+              <div className="aspect-4/5 bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-linear-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
                 <div className="z-10 bg-white/80 p-6 rounded-full backdrop-blur-sm border border-foreground/10 group-hover:scale-110 transition-transform duration-200">
                   <Zap className="w-12 h-12 text-brass-dark" />
                 </div>
               </div>
-              <div className="p-8 text-center flex-grow flex flex-col justify-between">
+              <div className="p-8 text-center grow flex flex-col justify-between">
                 <div>
                   <h3 className="font-display text-2xl text-foreground mb-2 font-normal group-hover:text-brass-dark transition-colors">Lakshmi</h3>
                   <p className="text-brass-dark text-[10px] uppercase tracking-[0.15em] font-bold mb-4">Embodiment of Wealth</p>
@@ -255,13 +255,13 @@ export default function LandingPage() {
             </div>
 
             <div className="liquid-glass overflow-hidden flex flex-col group transition duration-200 hover:shadow-xl hover:-translate-y-2 cursor-pointer focus-visible:ring-3 focus-visible:ring-primary/50 outline-none active:scale-[0.98]" tabIndex={0}>
-              <div className="aspect-[4/5] bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
+              <div className="aspect-4/5 bg-cream border-b border-foreground/10 p-4 relative overflow-hidden flex items-center justify-center">
+                <div className="absolute inset-0 bg-linear-to-tr from-warm-white/50 to-brass-light/50 opacity-40 group-hover:opacity-60 transition-opacity mix-blend-multiply"></div>
                 <div className="z-10 bg-white/80 p-6 rounded-full backdrop-blur-sm border border-foreground/10 group-hover:scale-110 transition-transform duration-200">
                   <Box className="w-12 h-12 text-brass-dark" />
                 </div>
               </div>
-              <div className="p-8 text-center flex-grow flex flex-col justify-between">
+              <div className="p-8 text-center grow flex flex-col justify-between">
                 <div>
                   <h3 className="font-display text-2xl text-foreground mb-2 font-normal group-hover:text-brass-dark transition-colors">Ganesha</h3>
                   <p className="text-brass-dark text-[10px] uppercase tracking-[0.15em] font-bold mb-4">Lord of Beginnings</p>
@@ -284,7 +284,7 @@ export default function LandingPage() {
                 <p><span className="font-semibold text-foreground">Email:</span> sales@padmavaticorp.com</p>
               </div>
             </div>
-            <div className="w-full md:w-2/3 h-[300px] md:h-auto bg-white relative overflow-hidden flex-shrink-0 rounded-2xl">
+            <div className="w-full md:w-2/3 h-75 md:h-auto bg-white relative overflow-hidden shrink-0 rounded-2xl">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d117865.75168051664!2d70.00030588820464!3d22.469796062137682!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x395715494d4d6829%3A0xc3e655bbcf1a58eb!2sJamnagar%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1703666000000!5m2!1sen!2sin"
                 className="absolute inset-0 w-full h-full border-0"

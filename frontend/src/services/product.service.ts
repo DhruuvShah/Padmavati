@@ -5,9 +5,11 @@ export class ProductService {
     const { data, error } = await supabase
       .from("products")
       .select(`
-        id, 
-        name, 
-        weight_kg, 
+        id,
+        name,
+        sku,
+        qr_code_url,
+        weight_kg,
         height_inches, 
         length_inches, 
         rate_type,
@@ -30,5 +32,14 @@ export class ProductService {
       throw error;
     }
     return data || [];
+  }
+
+  /** Looks up a product's id by its exact SKU (as decoded from a scanned barcode). */
+  static async getIdBySku(sku: string): Promise<string | null> {
+    const { data, error } = await supabase.from("products").select("id").eq("sku", sku).maybeSingle();
+    if (error) {
+      throw error;
+    }
+    return data?.id ?? null;
   }
 }

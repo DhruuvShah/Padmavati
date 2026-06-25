@@ -5,6 +5,8 @@ import { uploadImageRouter } from "./routes/upload-image.routes";
 import { catalogueRouter } from "./routes/catalogue.routes";
 import { catalogueAccessRouter } from "./routes/catalogue-access.routes";
 import { adminRequestsRouter } from "./routes/admin-requests.routes";
+import { productsRouter } from "./routes/products.routes";
+import { productCodesRouter } from "./routes/product-codes.routes";
 
 /**
  * Builds the Express app without binding to a port, so tests can exercise
@@ -39,6 +41,8 @@ export function createApp(): Express {
   app.use(catalogueRouter);
   app.use(catalogueAccessRouter);
   app.use(adminRequestsRouter);
+  app.use(productsRouter);
+  app.use(productCodesRouter);
 
   return app;
 }

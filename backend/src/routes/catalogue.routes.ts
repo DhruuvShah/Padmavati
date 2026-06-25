@@ -1,8 +1,8 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { supabase, adminSupabase } from "../lib/supabase";
-import { buildCatalogueHtml, sortProductsByRequestedOrder } from "../lib/catalogueTemplate";
-import { renderHtmlToPdf } from "../lib/renderPdf";
+import { sortProductsByRequestedOrder } from "../lib/catalogueTemplate";
+import { renderCataloguePdf } from "../lib/CatalogueDocument";
 
 export const catalogueRouter = Router();
 
@@ -23,6 +23,9 @@ catalogueRouter.post("/api/generate-catalogue", async (req, res) => {
       .select(`
         id,
         name,
+        sku,
+        barcode_url,
+        qr_code_url,
         image_url,
         weight_kg,
         height_inches,
@@ -38,8 +41,7 @@ catalogueRouter.post("/api/generate-catalogue", async (req, res) => {
     if (pErr) throw new Error("Failed to fetch products: " + pErr.message);
 
     const sortedProducts = sortProductsByRequestedOrder(productIds, products ?? []);
-    const html = buildCatalogueHtml(title, sortedProducts as any);
-    const pdfBuffer = await renderHtmlToPdf(html);
+    const pdfBuffer = await renderCataloguePdf(title, sortedProducts as any);
 
     const share_uuid = crypto.randomUUID();
     const fileName = share_uuid + ".pdf";
@@ -83,7 +85,7 @@ catalogueRouter.post("/api/generate-catalogue", async (req, res) => {
     const catalogueProducts = sortedProducts.map((p, index) => ({
       catalogue_id: catalogueId,
       product_id: p.id,
-      sort_order: index,
+      position: index,
     }));
 
     const { error: cpErr } = await adminSupabase

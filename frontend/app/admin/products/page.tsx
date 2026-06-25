@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Upload, Download, Plus, Weight, Ruler, Package } from "lucide-react";
+import { Search, Upload, Download, Plus, Weight, Ruler, Package, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
@@ -15,6 +15,7 @@ import { parseCSVLine, buildCsv, mapCsvRowToProduct } from "@/lib/csv";
 export default function ProductsPage() {
   const router = useRouter();
   const importInputRef = useRef<HTMLInputElement>(null);
+  const [backfilling, setBackfilling] = useState(false);
   const {
     products: filteredProducts,
     categories,
@@ -60,6 +61,27 @@ export default function ProductsPage() {
       toast.success("Products exported successfully");
     } catch (err: any) {
       toast.error("Export failed: " + err.message);
+    }
+  };
+
+  const handleBackfillSkus = async () => {
+    setBackfilling(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin/backfill-skus", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Backfill failed");
+      toast.success(
+        `Assigned SKUs to ${data.productsBackfilled} product${data.productsBackfilled !== 1 ? 's' : ''}, generated codes for ${data.codesBackfilled}`
+      );
+      refetch();
+    } catch (err: any) {
+      toast.error("Backfill failed: " + err.message);
+    } finally {
+      setBackfilling(false);
     }
   };
 
@@ -114,7 +136,9 @@ export default function ProductsPage() {
           if (!error) imported++; else skipped++;
         }
 
-        toast.success(`Imported ${imported} product${imported !== 1 ? 's' : ''}${skipped > 0 ? `, ${skipped} skipped` : ''}`);
+        toast.success(
+          `Imported ${imported} product${imported !== 1 ? 's' : ''}${skipped > 0 ? `, ${skipped} skipped` : ''}. Click "Backfill SKUs" to generate their barcodes/QR codes.`
+        );
         refetch();
       } catch (err: any) {
         toast.error("Import failed: " + err.message);
@@ -132,6 +156,9 @@ export default function ProductsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <input ref={importInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportFile} />
+          <Button variant="outline" size="sm" onClick={handleBackfillSkus} disabled={backfilling} className="font-medium border-transparent sm:h-auto sm:px-4 sm:py-2 rounded-3xl">
+            <RefreshCw className={`h-4 w-4 mr-2 ${backfilling ? 'animate-spin' : ''}`} /> <span className="hidden sm:inline">{backfilling ? "Backfilling..." : "Backfill SKUs"}</span>
+          </Button>
           <Button variant="outline" size="sm" onClick={() => importInputRef.current?.click()} className="font-medium border-transparent sm:h-auto sm:px-4 sm:py-2 rounded-3xl">
             <Upload className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Import</span>
           </Button>
@@ -150,7 +177,7 @@ export default function ProductsPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search products..."
+            placeholder="Search by name or SKU..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 liquid-glass shadow-none border-transparent h-10 w-full rounded-3xl"
@@ -206,7 +233,15 @@ export default function ProductsPage() {
               </div>
 
               <div className="p-5 flex-1 flex flex-col">
-                <h2 className="font-heading font-semibold text-lg text-card-foreground line-clamp-1 mb-3">{product.name}</h2>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div>
+                    <h2 className="font-heading font-semibold text-lg text-card-foreground line-clamp-1 mb-1">{product.name}</h2>
+                    {product.sku && <p className="text-xs font-mono text-muted-foreground">{product.sku}</p>}
+                  </div>
+                  {product.qr_code_url && (
+                    <img src={product.qr_code_url} alt="QR code" className="h-10 w-10 object-contain bg-white rounded-md p-0.5 shrink-0" />
+                  )}
+                </div>
 
                 <div className="space-y-1.5 mb-6 mt-auto">
                   <div className="flex items-center text-sm text-muted-foreground">

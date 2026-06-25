@@ -3,10 +3,10 @@ import express from "express";
 import request from "supertest";
 import { createMockQueryBuilder } from "../test-utils/mockSupabase";
 
-const { mockRenderHtmlToPdf } = vi.hoisted(() => ({
-  mockRenderHtmlToPdf: vi.fn().mockResolvedValue(Buffer.from("fake-pdf-bytes")),
+const { mockRenderCataloguePdf } = vi.hoisted(() => ({
+  mockRenderCataloguePdf: vi.fn().mockResolvedValue(Buffer.from("fake-pdf-bytes")),
 }));
-vi.mock("../lib/renderPdf", () => ({ renderHtmlToPdf: mockRenderHtmlToPdf }));
+vi.mock("../lib/CatalogueDocument", () => ({ renderCataloguePdf: mockRenderCataloguePdf }));
 
 const mockProductsBuilder = createMockQueryBuilder({
   data: [
@@ -56,7 +56,7 @@ describe("POST /api/generate-catalogue", () => {
     mockUpload.mockReset().mockResolvedValue({ error: null });
     mockGetPublicUrl.mockReset().mockReturnValue({ data: { publicUrl: "https://example.com/x.pdf" } });
     mockListBuckets.mockReset().mockResolvedValue({ data: [{ name: "catalogue-pdfs" }] });
-    mockRenderHtmlToPdf.mockClear();
+    mockRenderCataloguePdf.mockClear();
   });
 
   it("returns 400 when title is missing", async () => {
@@ -95,7 +95,7 @@ describe("POST /api/generate-catalogue", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.catalogue.share_uuid).toBe("uuid-1");
-    expect(mockRenderHtmlToPdf).toHaveBeenCalledOnce();
+    expect(mockRenderCataloguePdf).toHaveBeenCalledOnce();
     expect(mockUpload).toHaveBeenCalledOnce();
   });
 

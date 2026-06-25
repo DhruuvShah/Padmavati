@@ -94,7 +94,7 @@ export default function AccessRequestsPage() {
               <div className="space-y-2 mb-6 flex-1">
                 <div className="text-sm"><span className="text-muted-foreground">Email:</span> {req.email}</div>
                 <div className="text-sm"><span className="text-muted-foreground">Mobile:</span> {req.mobile}</div>
-                <div className="mt-4 p-3 liquid-glass border-transparent hover:bg-white/40 rounded-3xl border border-border">
+                <div className="mt-4 p-3 liquid-glass border-transparent hover:bg-white/40 rounded-3xl border">
                   <span className="text-xs text-muted-foreground block mb-1">Requested Catalogue</span>
                   <span className="font-medium text-sm">{req.catalogue?.title || 'Unknown Catalogue'}</span>
                 </div>

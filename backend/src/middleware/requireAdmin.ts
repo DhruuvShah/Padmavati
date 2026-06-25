@@ -4,6 +4,7 @@ import { supabase, supabaseUrl, supabaseAnonKey } from "../lib/supabase";
 
 export interface AuthedRequest extends Request {
   supabaseToken?: string;
+  user?: { id: string; email?: string };
 }
 
 /**
@@ -19,6 +20,7 @@ export async function requireAdmin(req: AuthedRequest, res: Response, next: Next
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (!error && user) {
         req.supabaseToken = token;
+        req.user = { id: user.id, email: user.email };
         return next();
       }
     }
@@ -40,6 +42,7 @@ export async function requireAdmin(req: AuthedRequest, res: Response, next: Next
 
     const { data: { session } } = await supabaseServer.auth.getSession();
     req.supabaseToken = session?.access_token;
+    req.user = { id: user.id, email: user.email };
 
     next();
   } catch (e) {

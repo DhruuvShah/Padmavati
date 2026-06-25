@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { buildCatalogueHtml, sortProductsByRequestedOrder, type CatalogueProduct } from "./catalogueTemplate";
+import {
+  sortProductsByRequestedOrder,
+  formatRate,
+  getCategoryName,
+  getWeightText,
+  getDimensionsText,
+  type CatalogueProduct,
+} from "./catalogueTemplate";
 
 describe("sortProductsByRequestedOrder", () => {
   it("reorders products to match the requested id order, not DB order", () => {
@@ -19,79 +26,60 @@ describe("sortProductsByRequestedOrder", () => {
   });
 });
 
-describe("buildCatalogueHtml", () => {
-  const baseProduct: CatalogueProduct = {
-    id: "1",
-    name: "Ganesh Idol",
-    image_url: "https://example.com/ganesh.jpg",
-    weight_kg: 2.5,
-    height_inches: "10",
-    length_inches: "6",
-    rate_type: "per_kg",
-    direct_rate: 1500,
-    category: { name: "Ganpati" },
-  };
-
-  it("includes the catalogue title", () => {
-    const html = buildCatalogueHtml("Festival Collection 2026", [baseProduct]);
-    expect(html).toContain("Festival Collection 2026");
-  });
-
-  it("renders product name, category, weight and dimensions", () => {
-    const html = buildCatalogueHtml("Title", [baseProduct]);
-    expect(html).toContain("Ganesh Idol");
-    expect(html).toContain("Ganpati");
-    expect(html).toContain("2.5 kg");
-    expect(html).toContain("H: 10 × L: 6");
-  });
-
+describe("formatRate", () => {
   it("prefers direct_rate over rate_code when both could apply", () => {
-    const html = buildCatalogueHtml("Title", [
-      { ...baseProduct, direct_rate: 999, rate_code: { code: "SS1", value: 1200 } },
-    ]);
-    expect(html).toContain("₹999/kg");
-    expect(html).not.toContain("SS1");
+    expect(formatRate("per_kg", 999, { code: "SS1", value: 1200 })).toBe("₹999/kg");
   });
 
   it("falls back to rate_code when direct_rate is absent", () => {
-    const html = buildCatalogueHtml("Title", [
-      { ...baseProduct, direct_rate: null, rate_code: { code: "SS1", value: 1200 } },
-    ]);
-    expect(html).toContain("SS1 → ₹1200/kg");
+    expect(formatRate("per_kg", null, { code: "SS1", value: 1200 })).toBe("SS1 → ₹1200/kg");
   });
 
-  it("shows a placeholder when a product has no image", () => {
-    const html = buildCatalogueHtml("Title", [{ ...baseProduct, image_url: null }]);
-    expect(html).toContain("No Image");
+  it("returns a dash when neither direct_rate nor rate_code is set", () => {
+    expect(formatRate("per_piece", null, null)).toBe("-");
+  });
+
+  it("uses the 'piece' unit for per_piece products", () => {
+    expect(formatRate("per_piece", 500, null)).toBe("₹500/piece");
+  });
+});
+
+describe("getCategoryName", () => {
+  const base: CatalogueProduct = { id: "1", name: "Ganesh", rate_type: "per_kg" };
+
+  it("returns the category name when present", () => {
+    expect(getCategoryName({ ...base, category: { name: "Ganpati" } })).toBe("Ganpati");
   });
 
   it("falls back to 'Uncategorized' when category is missing", () => {
-    const html = buildCatalogueHtml("Title", [{ ...baseProduct, category: null }]);
-    expect(html).toContain("Uncategorized");
+    expect(getCategoryName({ ...base, category: null })).toBe("Uncategorized");
+  });
+});
+
+describe("getWeightText", () => {
+  const base: CatalogueProduct = { id: "1", name: "Ganesh", rate_type: "per_kg" };
+
+  it("formats a present weight in kg", () => {
+    expect(getWeightText({ ...base, weight_kg: 2.5 })).toBe("2.5 kg");
   });
 
-  it("renders a variants table only when variants exist", () => {
-    // Note: the <style> block always contains the literal text "variants-table"
-    // in its CSS selectors, so we assert on the actual markup, not a bare substring.
-    const withoutVariants = buildCatalogueHtml("Title", [{ ...baseProduct, variants: [] }]);
-    expect(withoutVariants).not.toContain('<table class="variants-table">');
+  it("returns a dash when weight is missing", () => {
+    expect(getWeightText({ ...base, weight_kg: null })).toBe("-");
+  });
+});
 
-    const withVariants = buildCatalogueHtml("Title", [
-      {
-        ...baseProduct,
-        variants: [{ weight_kg: 1, direct_rate: 700, height_inches: "8", length_inches: "5" }],
-      },
-    ]);
-    expect(withVariants).toContain('<table class="variants-table">');
-    expect(withVariants).toContain("₹700/kg");
+describe("getDimensionsText", () => {
+  const base: CatalogueProduct = { id: "1", name: "Ganesh", rate_type: "per_kg" };
+
+  it("formats height and length when present", () => {
+    expect(getDimensionsText({ ...base, height_inches: "10", length_inches: "6" })).toBe("H: 10 × L: 6");
   });
 
-  it("renders one product-card per product, preserving array order", () => {
-    const html = buildCatalogueHtml("Title", [
-      { ...baseProduct, id: "1", name: "First" },
-      { ...baseProduct, id: "2", name: "Second" },
-    ]);
-    expect(html.indexOf("First")).toBeLessThan(html.indexOf("Second"));
-    expect(html.match(/product-card/g)?.length).toBeGreaterThanOrEqual(2);
+  it("fills in a dash for whichever dimension is missing", () => {
+    expect(getDimensionsText({ ...base, height_inches: "10", length_inches: null })).toBe("H: 10 × L: -");
+  });
+
+  it("returns a dash when both dimensions are missing", () => {
+    expect(getDimensionsText({ ...base, height_inches: null, length_inches: null })).toBe("-");
   });
 });

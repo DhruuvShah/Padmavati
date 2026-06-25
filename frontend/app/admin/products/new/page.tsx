@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { SearchableCombobox } from "@/components/SearchableCombobox";
+import { generateProductCodes } from "@/lib/productCodes";
 
 type Variant = {
   id?: string;
@@ -153,6 +154,11 @@ export default function NewProductPage() {
       }
 
       toast.success("Product added successfully");
+      try {
+        await generateProductCodes(productId);
+      } catch {
+        toast.warning("Product saved, but its barcode/QR code couldn't be generated yet. Use \"Backfill SKUs\" on the Products page to retry.");
+      }
       router.push("/admin/products");
     } catch (err: any) {
       toast.error("Error saving product: " + err.message);
@@ -208,7 +214,7 @@ export default function NewProductPage() {
       <div className="liquid-glass overflow-hidden rounded-3xl">
         <div className="p-4 sm:p-8 space-y-8">
           <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-            <div className="w-full sm:w-48 flex-shrink-0 space-y-3">
+            <div className="w-full sm:w-48 shrink-0 space-y-3">
               <Label>Product Image</Label>
               <div
                 onClick={() => fileInputRef.current?.click()}
@@ -216,7 +222,7 @@ export default function NewProductPage() {
                 tabIndex={0}
                 aria-label="Upload Photo"
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
-                className="aspect-square liquid-glass border-transparent border-2 border-dashed border-border rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
+                className="aspect-square liquid-glass border-transparent border-2 border-dashed rounded-3xl flex flex-col items-center justify-center cursor-pointer hover:bg-white/40 transition active:scale-[0.98] focus-visible:ring-3 focus-visible:ring-ring/50 outline-none relative overflow-hidden group"
               >
                 {imagePreview ? (
                   <>
@@ -301,7 +307,7 @@ export default function NewProductPage() {
               </div>
             </fieldset>
 
-            <div className="p-6 liquid-glass border-transparent border border-border rounded-3xl">
+            <div className="p-6 liquid-glass border-transparent border rounded-3xl">
               {rateType === 'per_kg' ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-center gap-2 p-1 bg-muted rounded-3xl max-w-sm">

@@ -19,6 +19,7 @@ const DEFAULT_MAX_WEIGHT_G = 10000;
 interface CatalogueProduct {
   id: string;
   name: string;
+  sku: string | null;
   image_url: string | null;
   weight_kg: number | string | null;
   height_inches: string | null;
@@ -59,7 +60,7 @@ export default function CreateCataloguePage() {
     try {
       const [pRes, cRes] = await Promise.all([
         supabase.from('products').select(`
-          id, name, image_url, weight_kg, height_inches, length_inches,
+          id, name, sku, image_url, weight_kg, height_inches, length_inches,
           rate_type, direct_rate, category_id,
           category:categories(name),
           rate_code:rate_codes(code, value)
@@ -306,7 +307,8 @@ export default function CreateCataloguePage() {
                     </div>
 
                     <div className="p-4 flex-1 flex flex-col">
-                      <h2 className="font-heading font-semibold text-base text-card-foreground line-clamp-1 mb-2">{product.name}</h2>
+                      <h2 className="font-heading font-semibold text-base text-card-foreground line-clamp-1 mb-1">{product.name}</h2>
+                      {product.sku && <p className="text-[10px] font-mono text-muted-foreground mb-2">{product.sku}</p>}
                       <div className="space-y-1 mb-4">
                         <div className="flex items-center text-xs text-muted-foreground"><Weight className="h-3 w-3 mr-2 opacity-70" />{weightStr}</div>
                         <div className="flex items-center text-xs text-muted-foreground"><Ruler className="h-3 w-3 mr-2 opacity-70" />{sizeStr}</div>

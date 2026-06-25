@@ -28,12 +28,14 @@ export class DashboardService {
       .select(`
         id,
         name,
+        rate_type,
         direct_rate,
-        category:categories(name)
+        category:categories(name),
+        rate_code:rate_codes(code, value)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
-      
+
     return data || [];
   }
 }

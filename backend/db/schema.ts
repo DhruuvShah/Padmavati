@@ -16,9 +16,22 @@ export const users = pgTable("users", {
 export const categories = pgTable("categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
-  tags: text("tags").array(), 
+  tags: text("tags").array(),
+  // SKU prefix for this category's products (e.g. "GAN"). Auto-derived from
+  // the name on insert if left blank — see the assign_category_sku_prefix
+  // trigger — but admin-editable afterward.
+  skuPrefix: text("sku_prefix").unique(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Race-safe per-prefix counter backing auto-generated product SKUs.
+// Incremented atomically via INSERT ... ON CONFLICT DO UPDATE in the
+// assign_product_sku trigger, so concurrent inserts can't hand out the
+// same number twice.
+export const skuSequences = pgTable("sku_sequences", {
+  prefix: text("prefix").primaryKey(),
+  lastNumber: integer("last_number").default(0).notNull(),
 });
 
 export const parties = pgTable("parties", {
@@ -43,6 +56,14 @@ export const rateCodes = pgTable("rate_codes", {
 export const products = pgTable("products", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  // Permanent, auto-generated on insert via the assign_product_sku trigger
+  // (category prefix + race-safe sequence number). Admin can override it
+  // manually afterward; the trigger only fills it in when null.
+  sku: text("sku").unique(),
+  // Code128 barcode and QR code PNGs, rendered from the sku and stored in
+  // Supabase Storage once it's assigned (see /api/admin/generate-product-codes).
+  barcodeUrl: text("barcode_url"),
+  qrCodeUrl: text("qr_code_url"),
   categoryId: uuid("category_id").notNull().references(() => categories.id),
   partyId: uuid("party_id").references(() => parties.id),
   weightKg: numeric("weight_kg", { precision: 10, scale: 3 }),

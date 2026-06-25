@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { Resend } from "resend";
-import { adminSupabase, supabaseAnonKey } from "../lib/supabase";
-import { requireAdmin } from "../middleware/requireAdmin";
+import { adminSupabase } from "../lib/supabase";
+import { requireAdmin, type AuthedRequest } from "../middleware/requireAdmin";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "re_dummy");
 
@@ -26,48 +26,55 @@ adminRequestsRouter.get("/api/admin/pending-requests", requireAdmin, async (_req
   }
 });
 
-adminRequestsRouter.post("/api/admin/approve-request", requireAdmin, async (req, res) => {
+adminRequestsRouter.post("/api/admin/approve-request", requireAdmin, async (req: AuthedRequest, res) => {
   try {
     const { id } = req.body;
 
-    const { data: request } = await adminSupabase
+    const { data: request, error } = await adminSupabase
       .from("access_requests")
       .update({
         status: "approved",
-        decided_by: supabaseAnonKey, // mock since we don't extract user ID easily here
+        decided_by: req.user?.id ?? null,
         decided_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("*, catalogue:catalogues(pdf_url, title)")
+      .select("*, catalogue:catalogues(pdf_url, title, share_uuid)")
       .single();
 
-    if (process.env.RESEND_API_KEY && request) {
-      await resend.emails.send({
+    if (error) throw new Error("Failed to approve request: " + error.message);
+
+    const pdfUrl = (request.catalogue as any).pdf_url;
+
+    if (process.env.RESEND_API_KEY) {
+      const { error: emailError } = await resend.emails.send({
         from: "Padmavati <onboarding@resend.dev>",
         to: request.email,
         subject: `Catalogue Approved: ${(request.catalogue as any).title}`,
-        html: `<p>Your request to view the catalogue has been approved.</p><p><a href="${(request.catalogue as any).pdf_url}">Click here to view</a></p>`,
+        html: `<p>Your request to view the catalogue has been approved.</p><p><a href="${pdfUrl}">Click here to view</a></p>`,
       });
+      if (emailError) console.error("Failed to send approval email:", emailError);
     }
 
-    res.json({ success: true });
+    res.json({ success: true, pdfUrl });
   } catch (e: any) {
     res.status(500).json({ error: e.message });
   }
 });
 
-adminRequestsRouter.post("/api/admin/deny-request", requireAdmin, async (req, res) => {
+adminRequestsRouter.post("/api/admin/deny-request", requireAdmin, async (req: AuthedRequest, res) => {
   try {
     const { id } = req.body;
 
-    await adminSupabase
+    const { error } = await adminSupabase
       .from("access_requests")
       .update({
         status: "denied",
-        decided_by: supabaseAnonKey, // mock
+        decided_by: req.user?.id ?? null,
         decided_at: new Date().toISOString(),
       })
       .eq("id", id);
+
+    if (error) throw new Error("Failed to deny request: " + error.message);
 
     res.json({ success: true });
   } catch (e: any) {

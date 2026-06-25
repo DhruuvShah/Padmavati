@@ -30,7 +30,8 @@ export function useProductController() {
   }, [loadData]);
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const term = search.toLowerCase();
+    const matchesSearch = p.name.toLowerCase().includes(term) || (p.sku ?? "").toLowerCase().includes(term);
     const matchesCategory = categoryFilter === "all" || p.category?.id === categoryFilter;
     return matchesSearch && matchesCategory;
   });

@@ -59,12 +59,12 @@ export default function DashboardPage() {
             
             <div className="space-y-0">
               {recentProducts.length === 0 ? (
-                <div className="text-sm text-muted-foreground py-8 text-center liquid-glass border-transparent rounded-3xl border border-border mt-4">
+                <div className="text-sm text-muted-foreground py-8 text-center liquid-glass border-transparent rounded-3xl border mt-4">
                   No products found. Start by adding a product.
                 </div>
               ) : (
                 recentProducts.map((prod, i) => (
-                  <div key={i} className="flex items-center justify-between py-4 border-b border-border last:border-0 hover:liquid-glass border-transparent hover:bg-white/40 transition-colors px-2 -mx-2 rounded-3xl">
+                  <div key={i} className="flex items-center justify-between py-4 border-b last:border-0 hover:liquid-glass border-transparent hover:bg-white/40 transition-colors px-2 -mx-2 rounded-3xl">
                     <div className="flex items-center gap-4">
                       {/* Fake Thumbnail for now */}
                       <div className="w-10 h-10 rounded-3xl bg-muted flex items-center justify-center shrink-0">

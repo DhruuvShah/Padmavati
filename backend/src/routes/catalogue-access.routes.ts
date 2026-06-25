@@ -16,12 +16,13 @@ async function sendOtpEmail(to: string, otp: string, subject: string) {
     console.log("Mock OTP Send to", to, ":", otp);
     return;
   }
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: "Padmavati <onboarding@resend.dev>",
     to,
     subject,
     html: `<p>Your access code is <strong>${otp}</strong>. It expires in ${OTP_TTL_MINUTES} minutes.</p>`,
   });
+  if (error) console.error("Failed to send OTP email:", error);
 }
 
 export const catalogueAccessRouter = Router();

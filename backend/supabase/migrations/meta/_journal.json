@@ -8,6 +8,41 @@
       "when": 1779542015907,
       "tag": "0000_optimal_smiling_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782376869368,
+      "tag": "0001_add_sku_support",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782382800000,
+      "tag": "0002_sku_sequences_rls",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782383297332,
+      "tag": "0003_add_product_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782407000000,
+      "tag": "0004_harden_sku_override",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782407500000,
+      "tag": "0005_fix_sku_number_overflow",
+      "breakpoints": true
     }
   ]
 }

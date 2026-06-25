@@ -14,7 +14,7 @@ export interface QueryResult<T = any> {
 export function createMockQueryBuilder<T = any>(result: QueryResult<T>) {
   const chainMethods = [
     "select", "insert", "update", "delete", "upsert",
-    "eq", "neq", "in", "order", "limit", "single", "maybeSingle",
+    "eq", "neq", "in", "is", "not", "or", "order", "limit", "single", "maybeSingle",
   ] as const;
 
   const builder: any = {};

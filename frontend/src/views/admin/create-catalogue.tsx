@@ -133,7 +133,7 @@ export default function CreateCataloguePage() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Left Sidebar - Filters & Actions */}
-        <div className="w-full lg:w-72 space-y-6 flex-shrink-0">
+        <div className="w-full lg:w-72 space-y-6 shrink-0">
           <div className="liquid-glass p-6 rounded-3xl">
             <h2 className="font-heading font-semibold flex items-center gap-2 mb-5 text-card-foreground">
               <Filter className="h-4 w-4 text-primary" /> Filters

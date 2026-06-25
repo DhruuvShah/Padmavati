@@ -4,14 +4,16 @@ import request from "supertest";
 import { createMockQueryBuilder } from "../test-utils/mockSupabase";
 
 vi.mock("../middleware/requireAdmin", () => ({
-  requireAdmin: (_req: any, _res: any, next: any) => next(),
+  requireAdmin: (req: any, _res: any, next: any) => {
+    req.user = { id: "admin-1", email: "admin@padmavati.com" };
+    next();
+  },
 }));
 
 let accessRequestsBuilder = createMockQueryBuilder<any>({ data: null, error: null });
 
 vi.mock("../lib/supabase", () => ({
   adminSupabase: { from: () => accessRequestsBuilder },
-  supabaseAnonKey: "test-anon-key",
 }));
 
 async function buildApp() {
@@ -53,11 +55,23 @@ describe("POST /api/admin/approve-request", () => {
     });
   });
 
-  it("approves the request and returns success", async () => {
+  it("approves the request and returns the catalogue pdf url", async () => {
     const app = await buildApp();
     const res = await request(app).post("/api/admin/approve-request").send({ id: "r1" });
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ success: true });
+    expect(res.body).toEqual({ success: true, pdfUrl: "https://x" });
+  });
+
+  // Regression test: the update used to silently fail (decided_by held an
+  // invalid value), but the route ignored the error and reported success
+  // anyway, leaving the request stuck as "pending" forever. It must now
+  // surface the failure instead of swallowing it.
+  it("returns 500 and does not report success when the update fails", async () => {
+    accessRequestsBuilder = createMockQueryBuilder({ data: null, error: { message: "invalid input syntax for type uuid" } });
+    const app = await buildApp();
+    const res = await request(app).post("/api/admin/approve-request").send({ id: "r1" });
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/invalid input syntax/);
   });
 });
 
@@ -68,5 +82,13 @@ describe("POST /api/admin/deny-request", () => {
     const res = await request(app).post("/api/admin/deny-request").send({ id: "r1" });
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ success: true });
+  });
+
+  it("returns 500 when the update fails", async () => {
+    accessRequestsBuilder = createMockQueryBuilder({ data: null, error: { message: "db down" } });
+    const app = await buildApp();
+    const res = await request(app).post("/api/admin/deny-request").send({ id: "r1" });
+    expect(res.status).toBe(500);
+    expect(res.body.error).toMatch(/db down/);
   });
 });
