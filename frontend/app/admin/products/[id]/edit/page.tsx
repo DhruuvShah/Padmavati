@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, Upload, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Upload, Plus, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -257,6 +257,24 @@ export default function EditProductPage() {
     }
   };
 
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Download failed");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch (err: any) {
+      toast.error("Download failed: " + err.message);
+    }
+  };
+
   const createCategory = async (catName: string) => {
     try {
       const { data, error } = await supabase.from("categories").insert({ name: catName }).select().single();
@@ -351,10 +369,28 @@ export default function EditProductPage() {
               {(barcodeUrl || qrCodeUrl) && (
                 <div className="flex items-center gap-4 p-4 liquid-glass border-transparent rounded-3xl">
                   {barcodeUrl && (
-                    <img src={barcodeUrl} alt="Barcode" className="h-16 object-contain bg-white rounded-lg p-1" />
+                    <div className="flex flex-col items-center gap-1">
+                      <img src={barcodeUrl} alt="Barcode" className="h-16 object-contain bg-white rounded-lg p-1" />
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(barcodeUrl, `${sku || "barcode"}-barcode.png`)}
+                        className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" /> Download
+                      </button>
+                    </div>
                   )}
                   {qrCodeUrl && (
-                    <img src={qrCodeUrl} alt="QR code" className="h-16 w-16 object-contain bg-white rounded-lg p-1" />
+                    <div className="flex flex-col items-center gap-1">
+                      <img src={qrCodeUrl} alt="QR code" className="h-16 w-16 object-contain bg-white rounded-lg p-1" />
+                      <button
+                        type="button"
+                        onClick={() => handleDownload(qrCodeUrl, `${sku || "qr"}-qr.png`)}
+                        className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" /> Download
+                      </button>
+                    </div>
                   )}
                   <Button type="button" variant="outline" size="sm" onClick={handleRegenerateCodes} disabled={regeneratingCodes} className="ml-auto">
                     {regeneratingCodes ? "Regenerating..." : "Regenerate"}

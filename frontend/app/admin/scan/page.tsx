@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import type { QrDimensions } from "html5-qrcode/esm/core";
 import { toast } from "sonner";
-import { CameraOff } from "lucide-react";
+import { ArrowLeft, CameraOff, QrCode, ScanBarcode, TriangleAlert } from "lucide-react";
 import { ProductService } from "@/services/product.service";
 import { parseScannedText } from "@/lib/scanLookup";
+
+type Mode = "choose" | "qr" | "barcode";
 
 // Re-showing an error for the exact same garbage/unmatched code every frame
 // (it can fire many times a second) would spam toasts, so we ignore repeats
@@ -25,12 +27,6 @@ function qrBoxFn(viewfinderWidth: number, viewfinderHeight: number): QrDimension
   return { width: size, height: size };
 }
 
-function barcodeBoxFn(viewfinderWidth: number, viewfinderHeight: number): QrDimensions {
-  const width = Math.max(80, Math.floor(viewfinderWidth * 0.85));
-  const height = Math.max(60, Math.floor(Math.min(viewfinderHeight * 0.5, width * 0.4)));
-  return { width, height };
-}
-
 async function safeStop(scanner: Html5Qrcode) {
   try {
     if (!scanner.isScanning) return;
@@ -46,19 +42,19 @@ async function safeStop(scanner: Html5Qrcode) {
   }
 }
 
+const READER_ELEMENT_ID = "scan-reader";
+
 function CameraScanner({
-  elementId,
-  label,
   formats,
   qrbox,
-  minHeightClass,
   onDetect,
 }: {
-  elementId: string;
-  label: string;
   formats: Html5QrcodeSupportedFormats[];
-  qrbox: (viewfinderWidth: number, viewfinderHeight: number) => QrDimensions;
-  minHeightClass: string;
+  // Omitted entirely for barcode scanning -- a Code128 barcode is wide and
+  // horizontal, so constraining the scan region to a small box means the
+  // user has to align it precisely inside that box. Without a qrbox,
+  // html5-qrcode searches the whole frame instead.
+  qrbox?: (viewfinderWidth: number, viewfinderHeight: number) => QrDimensions;
   onDetect: (text: string) => void;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,7 +65,16 @@ function CameraScanner({
 
   useEffect(() => {
     setError(null);
-    const scanner = new Html5Qrcode(elementId, {
+    // Prefer the native browser BarcodeDetector API when available (Android
+    // Chrome/Edge — hardware/OS-accelerated, no try-harder limitation) and
+    // fall back to the bundled zxing-js decoder otherwise (e.g. iOS Safari,
+    // which has no native BarcodeDetector at all). html5-qrcode's own zxing
+    // wrapper hardcodes TRY_HARDER=false with no way to override it through
+    // the public API, which is fine for QR (redundant finder patterns make
+    // it decodable on one quick pass) but hurts a 1D barcode the moment it's
+    // slightly rotated or skewed — so for Code128 in particular, getting the
+    // native decoder in the loop matters far more than for QR.
+    const scanner = new Html5Qrcode(READER_ELEMENT_ID, {
       formatsToSupport: formats,
       useBarCodeDetectorIfSupported: true,
       verbose: false,
@@ -77,8 +82,23 @@ function CameraScanner({
     let cancelled = false;
 
     const startPromise = scanner.start(
-      { facingMode: "environment" },
-      { fps: 20, qrbox, disableFlip: false },
+      {
+        facingMode: "environment",
+      },
+      {
+        fps: 10,
+        qrbox,
+        disableFlip: false,
+        // Passing videoConstraints requests the sharpest feed the camera
+        // can give us. More pixels per bar is the other big lever for
+        // decoding thin 1D bars reliably, especially since try-harder isn't
+        // available as a fallback for the zxing path.
+        videoConstraints: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+      },
       (decodedText) => {
         if (!cancelled) onDetectRef.current(decodedText);
       },
@@ -94,7 +114,7 @@ function CameraScanner({
       .catch((err) => {
         if (cancelled) return;
         setError("Camera unavailable — check permission and that you're on HTTPS (or localhost).");
-        console.error(`${label} scanner failed to start:`, err);
+        console.error("Scanner failed to start:", err);
       });
 
     return () => {
@@ -102,38 +122,36 @@ function CameraScanner({
       // Release the camera in the background...
       safeStop(scanner);
       // ...but wipe the DOM synchronously regardless, so a re-mount (Strict
-      // Mode, or a Retry click) never sees a stale <video> from a stop()
-      // that's still in flight.
+      // Mode, switching modes, or a Retry click) never sees a stale <video>
+      // from a stop() that's still in flight.
       if (containerRef.current) containerRef.current.innerHTML = "";
     };
-    // formats/qrbox/onDetect are fixed for the lifetime of a given panel instance
+    // formats/qrbox/onDetect are fixed for the lifetime of a given mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [elementId, retryCount]);
+  }, [retryCount]);
 
-  return (
-    <div className="liquid-glass p-4 sm:p-6 rounded-3xl flex-1">
-      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 text-center">{label}</p>
-      {error ? (
-        <div className="flex flex-col items-center text-center gap-3 py-10">
-          <CameraOff className="h-8 w-8 text-muted-foreground" />
-          <p className="text-xs text-muted-foreground">{error}</p>
-          <button
-            type="button"
-            onClick={() => setRetryCount((c) => c + 1)}
-            className="text-xs font-semibold text-primary hover:underline"
-          >
-            Try Again
-          </button>
-        </div>
-      ) : (
-        <div ref={containerRef} id={elementId} className={`overflow-hidden rounded-2xl bg-black ${minHeightClass}`} />
-      )}
-    </div>
-  );
+  if (error) {
+    return (
+      <div className="flex flex-col items-center text-center gap-3 py-10">
+        <CameraOff className="h-8 w-8 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">{error}</p>
+        <button
+          type="button"
+          onClick={() => setRetryCount((c) => c + 1)}
+          className="text-xs font-semibold text-primary hover:underline"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  return <div ref={containerRef} id={READER_ELEMENT_ID} className="overflow-hidden rounded-2xl bg-black min-h-70" />;
 }
 
 export default function ScanPage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("choose");
   const navigatingRef = useRef(false);
   const lastSeenRef = useRef<{ text: string; at: number } | null>(null);
 
@@ -182,23 +200,73 @@ export default function ScanPage() {
         </p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-6 max-w-4xl mx-auto">
-        <CameraScanner
-          elementId="scan-reader-qr"
-          label="QR Code"
-          formats={[Html5QrcodeSupportedFormats.QR_CODE]}
-          qrbox={qrBoxFn}
-          minHeightClass="min-h-70"
-          onDetect={handleDetect}
-        />
-        <CameraScanner
-          elementId="scan-reader-barcode"
-          label="Barcode"
-          formats={[Html5QrcodeSupportedFormats.CODE_128]}
-          qrbox={barcodeBoxFn}
-          minHeightClass="min-h-70"
-          onDetect={handleDetect}
-        />
+      <div
+        className={
+          mode === "choose"
+            ? "liquid-glass p-6 sm:p-8 rounded-3xl max-w-xl mx-auto"
+            // html5-qrcode sizes its decode canvas directly off this box's
+            // on-screen CSS width (not the camera's actual resolution), so a
+            // wider box with less padding eaten away is a straight increase
+            // in how many pixels each barcode bar gets to decode from --
+            // this matters far more for 1D barcodes than for QR.
+            : "liquid-glass p-2 sm:p-3 rounded-3xl max-w-3xl mx-auto"
+        }
+      >
+        {mode === "choose" ? (
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              type="button"
+              onClick={() => setMode("qr")}
+              className="flex flex-col items-center gap-3 p-8 rounded-2xl liquid-glass hover:bg-white/40 transition cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
+            >
+              <QrCode className="h-10 w-10 text-primary" />
+              <span className="text-sm font-semibold text-foreground">QR Code</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("barcode")}
+              className="flex flex-col items-center gap-3 p-8 rounded-2xl liquid-glass hover:bg-white/40 transition cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
+            >
+              <ScanBarcode className="h-10 w-10 text-primary" />
+              <span className="text-sm font-semibold text-foreground">Barcode</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => setMode("choose")}
+              className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground mb-4"
+            >
+              <ArrowLeft className="h-4 w-4" /> Choose differently
+            </button>
+            {mode === "qr" ? (
+              <CameraScanner formats={[Html5QrcodeSupportedFormats.QR_CODE]} qrbox={qrBoxFn} onDetect={handleDetect} />
+            ) : (
+              // Phone-camera scanning of 1D barcodes is unreliable industry-wide
+              // (that's why real stores use a dedicated scanner gun, not a phone)
+              // -- rather than keep fighting that physics, disable it here and
+              // point people at the hardware that's actually built for this job.
+              <div className="flex flex-col items-center text-center gap-3 py-10 px-4">
+                <TriangleAlert className="h-8 w-8 text-amber-500" />
+                <p className="text-sm font-semibold text-foreground">Barcode scanning is disabled</p>
+                <p className="text-xs text-muted-foreground max-w-sm">
+                  Phone cameras aren't reliable at reading barcodes — that's true everywhere, not just here, which is
+                  why real stores use a dedicated laser/CCD barcode scanner instead of a phone. Get a USB or Bluetooth
+                  barcode scanner gun (~₹1,500–3,000) and it will read this exact barcode instantly, every time.
+                </p>
+                <p className="text-xs text-muted-foreground">For phone scanning, use QR Code instead.</p>
+                <button
+                  type="button"
+                  onClick={() => setMode("qr")}
+                  className="mt-1 text-xs font-semibold text-primary hover:underline"
+                >
+                  Switch to QR Code
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
